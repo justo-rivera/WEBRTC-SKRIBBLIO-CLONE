@@ -29,7 +29,7 @@ class App extends React.Component {
       return <>Mega loading,.....................</>
     }
     return (
-      <div style={{overscrollBehaviorY: 'contain'}}>
+      <div>
       <Switch>
         <Route exact path={'/'} render={
           () => 

@@ -83,6 +83,7 @@ export default class Canvas extends React.Component{
     drawTouchs = (touchs, color = 'blue') => {
         const myCanvas = this.state.canvasRef.current
         const ctx = myCanvas.getContext('2d')
+        ctx.lineCap = 'round'
         ctx.beginPath()
         ctx.strokeStyle = color
         ctx.moveTo(touchs.lastPos.x, touchs.lastPos.y)

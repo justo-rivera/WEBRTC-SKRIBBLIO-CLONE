@@ -14,6 +14,7 @@ class App extends React.Component {
   }
   componentDidMount(){
     const socket = io.connect(process.env.WS_HEROKU || 'http://localhost:5000')
+    console.log(process.env)
     this.setState({socket, loading: false})
   }
   socketJoinRoom = ( selectedRoom, clientName, isLeader = false ) =>{

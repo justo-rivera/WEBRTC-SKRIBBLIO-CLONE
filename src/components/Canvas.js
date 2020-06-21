@@ -13,7 +13,7 @@ export default class Canvas extends React.Component{
         canvasRef: React.createRef()
     }
     componentDidMount(){
-        axios.get(`http://localhost:5000/api/room/${this.props.match.params.roomName}`)
+        axios.get(process.env.NODE_ENV === 'production' && `http://dibujio-server/api/room/${this.props.match.params.roomName}` || `http://localhost:5000/api/room/${this.props.match.params.roomName}`)
             .then( ({data: room}) => {
                 this.setState({room}, this.initPeers)
             })

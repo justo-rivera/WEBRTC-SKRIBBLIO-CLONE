@@ -102,7 +102,7 @@ export default class Canvas extends React.Component{
         return( 
             <>
             👉check the console 
-            <canvas ref={this.state.canvasRef} onTouchMove={this.touchMove} onTouchStart={this.touchStart} onTouchEnd={this.touchEnd} id="myCanvas" style={{border: '1px solid black'}} width='300' height='500'></canvas>
+            <canvas style={{overscrollBehavior: 'none', border: '1px solid black'}} ref={this.state.canvasRef} onTouchMove={this.touchMove} onTouchStart={this.touchStart} onTouchEnd={this.touchEnd} id="myCanvas" width='300' height='500'></canvas>
             </>) 
     }
 }

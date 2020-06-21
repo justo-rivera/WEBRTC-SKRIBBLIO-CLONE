@@ -69,10 +69,12 @@ export default class Canvas extends React.Component{
     initCanvas = () => {
     }
     touchStart = (evt) => {
+        evt.preventDefault()
         const {pageX: x, pageY: y} = evt.changedTouches[0]
         this.setState({lastPos: {x, y}})
     }
     touchMove = (evt) => {
+        evt.preventDefault()
         const touchs = evt.changedTouches
         const touchsXY = {lastPos: this.state.lastPos, x: touchs[0].pageX, y: touchs[0].pageY}
         this.sendTouchs(JSON.stringify(touchsXY))

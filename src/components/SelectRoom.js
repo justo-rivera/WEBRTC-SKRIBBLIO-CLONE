@@ -8,7 +8,7 @@ export default class SelectRoom extends React.Component{
         loading: true
     }
     componentDidMount(){
-        axios.get('http://localhost:5000/api/rooms')
+        axios.get((process.env.SERVER_HEROKU || 'http://localhost:5000') + '/api/rooms')
             .then( ({data: rooms}) => {
                 this.setState({rooms: rooms.map( room => room.name), loading: false})
             })

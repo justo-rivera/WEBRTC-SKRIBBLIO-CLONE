@@ -10,10 +10,10 @@ class App extends React.Component {
     name: '',
     selectedRoom: '',
     socket: null,
-    loading: true
+    loading: true,
   }
   componentDidMount(){
-    const socket = io.connect('http://localhost:5000')
+    const socket = io.connect(process.env.WS_HEROKU || 'http://localhost:5000')
     this.setState({socket, loading: false})
   }
   socketJoinRoom = ( selectedRoom, clientName, isLeader = false ) =>{

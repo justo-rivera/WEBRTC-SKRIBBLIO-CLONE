@@ -30,7 +30,7 @@ export default class Canvas extends React.Component{
             })
             newPeer.on('data', data => {
                 console.log('data: ' + data + client.name)
-                this.drawTouchs(JSON.parse(data), 'greenyellow')
+                this.drawTouchs(JSON.parse(data), 'red')
             })
             rtcPeers[client.name] = newPeer
         })

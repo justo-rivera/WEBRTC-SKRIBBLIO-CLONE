@@ -5,7 +5,7 @@ export default class SelectRoom extends React.Component{
         rooms: [],
         selectedRoom: '',
         clientName: '',
-        loading: true
+        loading: true,
     }
     componentDidMount(){
         axios.get((process.env.SERVER_HEROKU || 'http://localhost:5000') + '/api/rooms')

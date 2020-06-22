@@ -10,7 +10,8 @@ export default class Canvas extends React.Component{
         rtcPeers: [],
         lastPos: {},
         remoteLastPos: [],
-        canvasRef: React.createRef()
+        canvasRef: React.createRef(),
+        loading: !this.props.name
     }
     componentDidMount(){
         axios.get(process.env.NODE_ENV === 'production' && `http://dibujio-server.herokuapp.com/api/room/${this.props.match.params.roomName}` || `http://localhost:5000/api/room/${this.props.match.params.roomName}`)
@@ -26,7 +27,6 @@ export default class Canvas extends React.Component{
             newPeer.on('signal', data => {this.forwardSignal(JSON.stringify(data), this.state.myName, client.socket)})
             newPeer.on('connect', () => {
                 console.log('CONNECT')
-                newPeer.send('whatever' + Math.random())
             })
             newPeer.on('data', data => {
                 console.log('data: ' + data + client.name)
@@ -36,7 +36,6 @@ export default class Canvas extends React.Component{
         })
         this.state.socket.on('signal', (data, clientName, remoteSocket) => {
             const {rtcPeers} = this.state
-            console.log('invefore eif')
             if(rtcPeers[clientName]){
                 rtcPeers[clientName].signal(data)
             }
@@ -44,10 +43,8 @@ export default class Canvas extends React.Component{
                 let newPeer = new Peer({initiator: false, trickle: false, wrtc})
                 newPeer.on('signal', data => {this.forwardSignal(data, this.state.myName, remoteSocket)})
                 newPeer.signal(data)
-                console.log('signaleeeeeee.....', data)
                 newPeer.on('connect', () => {
                     console.log('CONNECT')
-                    //newPeer.send('whatever' + Math.random())
                 })
                 newPeer.on('data', data => {
                     console.log('data: ' + data + clientName)
@@ -62,7 +59,6 @@ export default class Canvas extends React.Component{
         this.setState({rtcPeers}, this.initCanvas)
     }
     forwardSignal = (signal, myName, remoteSocket) => {
-        console.log('forqwarding')
         const {socket} = this.state
         socket.emit('forward signal', signal, myName, remoteSocket)
     }
@@ -80,10 +76,11 @@ export default class Canvas extends React.Component{
         this.sendTouchs(JSON.stringify(touchsXY))
         this.drawTouchs(touchsXY)
     }
-    drawTouchs = (touchs, color = 'blue') => {
+    drawTouchs = (touchs, color = 'blue', remote = false) => {
         const myCanvas = this.state.canvasRef.current
         const ctx = myCanvas.getContext('2d')
         ctx.lineCap = 'round'
+        ctx.lineWidth = '6'
         ctx.beginPath()
         ctx.strokeStyle = color
         ctx.moveTo(touchs.lastPos.x, touchs.lastPos.y)
@@ -99,11 +96,27 @@ export default class Canvas extends React.Component{
             }
         }
     }
+    handleChange = (e) => {
+        e.preventDefault()
+        let cloneState = this.state
+        cloneState[e.target.name] = e.target.value
+        this.setState(cloneState)
+    }
     render(){
+        if(this.state.loading){
+            return(
+                <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                <p>Name:</p>
+                <input type="text" name="myName" onChange={this.handleChange}/>
+                <button onClick={() => {this.setState({loading: false}); this.props.joinRoom(this.state.room.name, this.state.myName)}}>JOIN</button>
+                </div>                
+            )
+        }
         return( 
             <>
             👉check the console 
             <canvas style={{border: '1px solid black'}} ref={this.state.canvasRef} onTouchMove={this.touchMove} onTouchStart={this.touchStart} onTouchEnd={this.touchEnd} id="myCanvas" width='300' height='500'></canvas>
+            {/* <Chat room={this.state.room} socket={this.state.socket}/> */}
             </>) 
     }
 }

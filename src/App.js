@@ -18,6 +18,7 @@ class App extends React.Component {
     this.setState({socket, loading: false})
   }
   socketJoinRoom = ( selectedRoom, clientName, isLeader = false ) =>{
+    console.log(selectedRoom, clientName, isLeader)
     const socket = this.state.socket
     socket.emit('join room', {selectedRoom, clientName, isLeader})
     socket.on('joined', data => console.log('joined...', data))
@@ -37,7 +38,7 @@ class App extends React.Component {
           }/>
         <Route path={'/:roomName'} render={
           (router) => 
-          <Canvas socket={this.state.socket} name={this.state.name} {...router}/>
+          <Canvas joinRoom={this.socketJoinRoom} socket={this.state.socket} name={this.state.name} {...router}/>
         }/>
       </Switch>
       </div>

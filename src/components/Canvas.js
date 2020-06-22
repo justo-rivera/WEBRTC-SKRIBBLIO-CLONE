@@ -18,6 +18,10 @@ export default class Canvas extends React.Component{
             .then( ({data: room}) => {
                 this.setState({room}, this.initPeers)
             })
+        this.state.socket.on('assigned name', newName=>{
+            console.log(newName)
+            this.setState({myName: newName})
+        })
     }
     initPeers = () =>{
         const {room} = {...this.state}

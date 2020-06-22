@@ -16,6 +16,10 @@ class App extends React.Component {
     const socket = io.connect(process.env.NODE_ENV === 'production' && 'ws://dibujio-server.herokuapp.com/' || 'http://localhost:5000')
     console.log(process.env)
     this.setState({socket, loading: false})
+    socket.on('assigned name', newName=>{
+      console.log(newName)
+      this.setState({name: newName})
+    })
   }
   socketJoinRoom = ( selectedRoom, clientName, isLeader = false ) =>{
     console.log(selectedRoom, clientName, isLeader)

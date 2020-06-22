@@ -16,7 +16,7 @@ export default class Canvas extends React.Component{
     componentDidMount(){
         axios.get(process.env.NODE_ENV === 'production' && `http://dibujio-server.herokuapp.com/api/room/${this.props.match.params.roomName}` || `http://localhost:5000/api/room/${this.props.match.params.roomName}`)
             .then( ({data: room}) => {
-                this.setState({room}, this.initPeers)
+                this.setState({room})//, this.initPeers)
             })
         this.state.socket.on('assigned name', newName=>{
             console.log(newName)
@@ -55,9 +55,10 @@ export default class Canvas extends React.Component{
                     this.drawTouchs(JSON.parse(data), 'red')
                 })
                 rtcPeers[clientName] = newPeer
+                console.log(clientName)
                 this.setState({
                     rtcPeers
-                })
+                }, ()=>{console.log(rtcPeers)})
             }
         })
         this.setState({rtcPeers}, this.initCanvas)
@@ -112,7 +113,11 @@ export default class Canvas extends React.Component{
                 <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
                 <p>Name:</p>
                 <input type="text" name="myName" onChange={this.handleChange}/>
-                <button onClick={() => {this.setState({loading: false}); this.props.joinRoom(this.state.room.name, this.state.myName)}}>JOIN</button>
+                <button onClick={() => {
+                    this.setState({loading: false})
+                    this.props.joinRoom(this.state.room.name, this.state.myName)
+                    this.initPeers()
+                    }}>JOIN</button>
                 </div>                
             )
         }

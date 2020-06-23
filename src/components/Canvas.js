@@ -7,7 +7,10 @@ export default class Canvas extends React.Component{
         socket: this.props.socket,
         myName: this.props.name,
         room: {name: this.props.match.params.roomName},
+        currentLeader: null,
+        gameHasStarted: false,
         rtcPeers: [],
+        connectedPeers: 0,
         lastPos: {},
         remoteLastPos: [],
         canvasRef: React.createRef(),
@@ -22,33 +25,53 @@ export default class Canvas extends React.Component{
             console.log(newName)
             this.setState({myName: newName})
         })
+        this.state.socket.on('new leader', leader => {
+            // let {room} = {...this.state}
+            // room.leader = leader
+            this.setState({currentLeader: leader})
+        })
+        this.state.socket.on('finish time', newTime => {
+            this.setState({timeFinish: Date.parse(newTime)})
+        })
     }
-    initPeers = () =>{
+    updateTime = () => {
+        this.setState({timer: new Date()})
+    }
+    initPeers = () => {
         const {room} = {...this.state}
         const rtcPeers = {}
-        room.clients.map( client => {
+        room.clients && room.clients.map( client => {
             let newPeer = new Peer({initiator: true, trickle: false, wrtc})
             newPeer.on('signal', data => {this.forwardSignal(JSON.stringify(data), this.state.myName, client.socket)})
+            newPeer.clientName = client.name
             newPeer.on('connect', () => {
                 console.log('CONNECT')
+                this.state.socket.emit('2 clients connected', {client1: this.state.myName, client2: client.name})
+                this.setState({connectedPeers: this.state.connectedPeers+1})
             })
             newPeer.on('data', data => {
                 console.log('data: ' + data + client.name)
-                this.drawTouchs(JSON.parse(data), 'red')
+                if(newPeer.clientName === this.state.currentLeader){
+                    this.drawTouchs(JSON.parse(data), 'red')
+                }
+                else console.log(newPeer.clientName, 'unsuccessfully tried to draw..')
             })
             rtcPeers[client.name] = newPeer
         })
         this.state.socket.on('signal', (data, clientName, remoteSocket) => {
             const {rtcPeers} = this.state
             if(rtcPeers[clientName]){
+                console.log('rtcpeers[',clientName,'] exists')
                 rtcPeers[clientName].signal(data)
             }
             else{
                 let newPeer = new Peer({initiator: false, trickle: false, wrtc})
+                newPeer.clientName = clientName
                 newPeer.on('signal', data => {this.forwardSignal(data, this.state.myName, remoteSocket)})
                 newPeer.signal(data)
                 newPeer.on('connect', () => {
                     console.log('CONNECT')
+                    this.setState({connectedPeers: this.state.connectedPeers+1})
                 })
                 newPeer.on('data', data => {
                     console.log('data: ' + data + clientName)
@@ -68,18 +91,24 @@ export default class Canvas extends React.Component{
         socket.emit('forward signal', signal, myName, remoteSocket)
     }
     initCanvas = () => {
+        setInterval(this.updateTime, 1000)
     }
     touchStart = (evt) => {
         evt.preventDefault()
-        const {pageX: x, pageY: y} = evt.changedTouches[0]
-        this.setState({lastPos: {x, y}})
+        if(this.state.myName === this.state.currentLeader){
+            const {pageX: x, pageY: y} = evt.changedTouches[0]
+            this.setState({lastPos: {x, y}})
+        }
     }
     touchMove = (evt) => {
         evt.preventDefault()
-        const touchs = evt.changedTouches
-        const touchsXY = {lastPos: this.state.lastPos, x: touchs[0].pageX, y: touchs[0].pageY}
-        this.sendTouchs(JSON.stringify(touchsXY))
-        this.drawTouchs(touchsXY)
+        if(this.state.myName === this.state.currentLeader){
+            const touchs = evt.changedTouches
+            const touchsXY = {lastPos: this.state.lastPos, x: touchs[0].pageX, y: touchs[0].pageY}
+            this.sendTouchs(JSON.stringify(touchsXY))
+            this.drawTouchs(touchsXY)
+        }
+        else console.log('you cant draw yet!')
     }
     drawTouchs = (touchs, color = 'blue', remote = false) => {
         const myCanvas = this.state.canvasRef.current
@@ -121,9 +150,14 @@ export default class Canvas extends React.Component{
                 </div>                
             )
         }
+        console.log(this.state.connectedPeers > 0 || '<p>Waiting for peers..</p>')
         return( 
             <>
-            👉check the console 
+            { this.state.connectedPeers > 0 || <p>Waiting for peers..</p> }
+            { this.state.connectedPeers > 0 && <><p>{this.state.currentLeader} is drawing</p> 
+                <p>{Math.floor((this.state.timeFinish - this.state.timer)/1000)} seconds left</p>
+            </>
+            }
             <canvas style={{border: '1px solid black'}} ref={this.state.canvasRef} onTouchMove={this.touchMove} onTouchStart={this.touchStart} onTouchEnd={this.touchEnd} id="myCanvas" width='300' height='500'></canvas>
             {/* <Chat room={this.state.room} socket={this.state.socket}/> */}
             </>) 

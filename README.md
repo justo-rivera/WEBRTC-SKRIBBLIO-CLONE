@@ -4,10 +4,6 @@ choose a word, draw! peers have to guess it
 
 # Project Name
 
-## Description
-
-Describe your project in one/two lines.
-
 ## User Stories
 
 A user creates a room and shares the link with their friends. Every 30 seconds a leader of the room is chosen, he selects a word and has the ability to draw on the canvas. What he draws is seen by the rest of the room, they can use the chat to try to guess the word.

@@ -13,7 +13,7 @@ class App extends React.Component {
     loading: true,
   }
   componentDidMount(){
-    const socket = io.connect(process.env.NODE_ENV === 'production' && 'ws://dibujio-server.herokuapp.com/' || 'http://localhost:5000')
+    const socket = io.connect(process.env.NODE_ENV === 'production' && 'wss://dibujio-server.herokuapp.com/' || 'http://localhost:5000')
     console.log(process.env)
     this.setState({socket, loading: false})
     socket.on('assigned name', newName=>{

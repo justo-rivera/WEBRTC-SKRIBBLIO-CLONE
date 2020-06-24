@@ -2,10 +2,13 @@ import React, { useRef } from 'react'
 import Peer from 'simple-peer'
 import wrtc from 'wrtc'
 import axios from 'axios'
+import Chat from './Chat'
 export default class Canvas extends React.Component{
     state = {
         socket: this.props.socket,
         myName: this.props.name,
+        chooseAWord: false,
+        possibleWords: [],
         room: {name: this.props.match.params.roomName},
         currentLeader: null,
         gameHasStarted: false,
@@ -17,21 +20,25 @@ export default class Canvas extends React.Component{
         loading: !this.props.name
     }
     componentDidMount(){
+        const {socket} = this.state
         axios.get(process.env.NODE_ENV === 'production' && `http://dibujio-server.herokuapp.com/api/room/${this.props.match.params.roomName}` || `http://localhost:5000/api/room/${this.props.match.params.roomName}`)
             .then( ({data: room}) => {
                 this.setState({room})//, this.initPeers)
             })
-        this.state.socket.on('assigned name', newName=>{
+        socket.on('assigned name', newName=>{
             console.log(newName)
             this.setState({myName: newName})
         })
-        this.state.socket.on('new leader', leader => {
+        socket.on('new leader', leader => {
             // let {room} = {...this.state}
             // room.leader = leader
             this.setState({currentLeader: leader})
         })
-        this.state.socket.on('finish time', newTime => {
+        socket.on('finish time', newTime => {
             this.setState({timeFinish: Date.parse(newTime)})
+        })
+        socket.on('choose word', possibleWords => {
+            this.setState({chooseAWord: true, possibleWords})
         })
     }
     updateTime = () => {
@@ -42,7 +49,10 @@ export default class Canvas extends React.Component{
         const rtcPeers = {}
         room.clients && room.clients.map( client => {
             let newPeer = new Peer({initiator: true, trickle: false, wrtc})
-            newPeer.on('signal', data => {this.forwardSignal(JSON.stringify(data), this.state.myName, client.socket)})
+            newPeer.on('signal', data => 
+            {
+                this.forwardSignal(JSON.stringify(data), this.state.myName, client.socket)
+            })
             newPeer.clientName = client.name
             newPeer.on('connect', () => {
                 console.log('CONNECT')
@@ -59,6 +69,7 @@ export default class Canvas extends React.Component{
             rtcPeers[client.name] = newPeer
         })
         this.state.socket.on('signal', (data, clientName, remoteSocket) => {
+            console.log('signal! clientName: ', clientName)
             const {rtcPeers} = this.state
             if(rtcPeers[clientName]){
                 console.log('rtcpeers[',clientName,'] exists')
@@ -130,6 +141,11 @@ export default class Canvas extends React.Component{
             }
         }
     }
+    chooseWord = (word) =>{
+        const {socket} = this.state
+        this.setState({chooseAWord: false, possibleWords: []})
+        socket.emit('chose word', word)
+    }
     handleChange = (e) => {
         e.preventDefault()
         let cloneState = this.state
@@ -158,8 +174,16 @@ export default class Canvas extends React.Component{
                 <p>{Math.floor((this.state.timeFinish - this.state.timer)/1000)} seconds left</p>
             </>
             }
+            {
+                this.state.chooseAWord &&
+                this.state.possibleWords.map( word => 
+                    <button onClick={()=>{this.chooseWord(word)}}>
+                        {word}
+                    </button>                    
+                )
+            }
             <canvas style={{border: '1px solid black'}} ref={this.state.canvasRef} onTouchMove={this.touchMove} onTouchStart={this.touchStart} onTouchEnd={this.touchEnd} id="myCanvas" width='300' height='500'></canvas>
-            {/* <Chat room={this.state.room} socket={this.state.socket}/> */}
+            <Chat room={this.state.room} socket={this.state.socket} myName={this.state.myName}/>
             </>) 
     }
 }

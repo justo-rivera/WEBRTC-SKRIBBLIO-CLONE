@@ -48,7 +48,7 @@ export default class Canvas extends React.Component{
         const {room} = {...this.state}
         const rtcPeers = {}
         room.clients && room.clients.map( client => {
-            let newPeer = new Peer({initiator: true, trickle: false, wrtc})
+            let newPeer = new Peer({initiator: true, trickle: true, wrtc})
             newPeer.on('signal', data => 
             {
                 this.forwardSignal(JSON.stringify(data), this.state.myName, client.socket)
@@ -76,7 +76,7 @@ export default class Canvas extends React.Component{
                 rtcPeers[clientName].signal(data)
             }
             else{
-                let newPeer = new Peer({initiator: false, trickle: false, wrtc})
+                let newPeer = new Peer({initiator: false, trickle: true, wrtc})
                 newPeer.clientName = clientName
                 newPeer.on('signal', data => {this.forwardSignal(data, this.state.myName, remoteSocket)})
                 newPeer.signal(data)

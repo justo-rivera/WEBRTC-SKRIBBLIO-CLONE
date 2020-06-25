@@ -39,7 +39,7 @@ class App extends React.Component {
           () => 
           <SelectRoom socket={this.state.socket} joinCallback={this.socketJoinRoom} />
           }/>
-        <Route path={'room/:roomName'} render={
+        <Route path={'/:roomName'} render={
           (router) => 
           <Canvas joinRoom={this.socketJoinRoom} socket={this.state.socket} name={this.state.name} {...router}/>
         }/>

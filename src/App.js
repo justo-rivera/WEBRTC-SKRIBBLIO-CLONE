@@ -1,7 +1,6 @@
 import React from 'react'
 import {Switch, Route, withRouter} from 'react-router-dom'
 import io from 'socket.io-client'
-import Peer from 'simple-peer'
 import SelectRoom from './components/SelectRoom'
 import Canvas from './components/Canvas'
 
@@ -40,7 +39,7 @@ class App extends React.Component {
           () => 
           <SelectRoom socket={this.state.socket} joinCallback={this.socketJoinRoom} />
           }/>
-        <Route path={'/:roomName'} render={
+        <Route path={'room/:roomName'} render={
           (router) => 
           <Canvas joinRoom={this.socketJoinRoom} socket={this.state.socket} name={this.state.name} {...router}/>
         }/>

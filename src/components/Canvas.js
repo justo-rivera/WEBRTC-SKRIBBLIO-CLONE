@@ -117,9 +117,10 @@ export default class Canvas extends React.Component{
     }
     touchMove = (evt) => {
         evt.preventDefault()
+        const myCanvas = this.state.canvasRef.current
         if(this.state.myName === this.state.currentLeader){
             const touchs = evt.changedTouches
-            const touchsXY = {lastPos: this.state.lastPos, x: touchs[0].pageX, y: touchs[0].pageY}
+            const touchsXY = {lastPos: this.state.lastPos, x: touchs[0].pageX - myCanvas.offsetLeft, y: touchs[0].pageY - myCanvas.offsetTop}
             this.sendTouchs(JSON.stringify(touchsXY))
             this.drawTouchs(touchsXY)
         }

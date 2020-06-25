@@ -32,6 +32,7 @@ export default class Canvas extends React.Component{
         socket.on('new leader', leader => {
             // let {room} = {...this.state}
             // room.leader = leader
+            this.clearCanvas()
             this.setState({currentLeader: leader})
         })
         socket.on('finish time', newTime => {
@@ -135,6 +136,11 @@ export default class Canvas extends React.Component{
         ctx.lineTo(touchs.x, touchs.y)
         ctx.stroke()
         this.setState({lastPos: {x: touchs.x, y: touchs.y}})
+    }
+    clearCanvas = () => {
+        const myCanvas = this.state.canvasRef.current
+        const ctx = myCanvas.getContext('2d')
+        ctx.clearRect(0, 0, myCanvas.width, myCanvas.height);
     }
     sendTouchs = (touchs) => {
         const {rtcPeers} = this.state

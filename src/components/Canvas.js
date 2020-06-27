@@ -9,12 +9,13 @@ export default class Canvas extends React.Component{
         myName: this.props.name,
         chooseAWord: false,
         possibleWords: [],
-        room: {name: this.props.match.params.roomName},
+        room: {name: this.props.match.params.roomName, clients: []},
         currentLeader: null,
         gameHasStarted: false,
         rtcPeers: [],
         connectedPeers: 0,
         lastPos: {},
+        isMouseDrawing: false,
         remoteLastPos: [],
         canvasRef: React.createRef(),
         loading: !this.props.name
@@ -23,10 +24,9 @@ export default class Canvas extends React.Component{
         const {socket} = this.state
         axios.get(process.env.NODE_ENV === 'production' && `https://dibujio-server.herokuapp.com/api/room/${this.props.match.params.roomName}` || `http://localhost:5000/api/room/${this.props.match.params.roomName}`)
             .then( ({data: room}) => {
-                this.setState({room})//, this.initPeers)
+                this.setState({room: room})//, this.initPeers)
             })
         socket.on('assigned name', newName=>{
-            console.log(newName)
             this.setState({myName: newName})
         })
         socket.on('new leader', leader => {
@@ -35,19 +35,63 @@ export default class Canvas extends React.Component{
             this.clearCanvas()
             this.setState({currentLeader: leader})
         })
+        socket.on('new client', client => {
+            const {room} = {...this.state}
+            console.log(room)
+            // if(!room.clients) room.clients = []
+            // room.clients.push(client)
+            // this.setState({room: room})
+        })
         socket.on('finish time', newTime => {
             this.setState({timeFinish: Date.parse(newTime)})
         })
         socket.on('choose word', possibleWords => {
             this.setState({chooseAWord: true, possibleWords})
         })
+        socket.on('signal', (data, clientName, remoteSocket) => {
+            // console.log('signal! clientName: ', clientName)
+            this.createPeer(data, clientName, remoteSocket)
+        })
     }
-    updateTime = () => {
-        this.setState({timer: new Date()})
+    socketJoinRoom = () =>{
+        const socket = this.state.socket
+        const { room, myName} = {...this.state}
+        socket.emit('join room', {selectedRoom: room.name, clientName: myName, isLeader: false})
+    }
+    createPeer = (data, clientName, remoteSocket) => {
+        
+        const {rtcPeers} = {...this.state}
+        if(rtcPeers[clientName]){
+            console.log('rtcpeers[',clientName,'] exists')
+            // console.log(this.state.rtcPeers)
+            // console.log(rtcPeers)
+            rtcPeers[clientName].signal(data)
+        }
+        else{
+            console.log('else')
+            let newPeer = new Peer({initiator: false, trickle: true, 
+                config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'turn:relay.backups.cz', username: 'webrtc', credential: 'webrtc' }] },
+                wrtc})
+            newPeer.clientName = clientName
+            newPeer.signal(data)
+            newPeer.on('signal', data => {this.forwardSignal(data, this.state.myName, remoteSocket)})
+            newPeer.on('connect', () => {
+                console.log('CONNECT')
+                this.setState({connectedPeers: this.state.connectedPeers+1})
+            })
+            newPeer.on('data', data => {
+                console.log('data: ' + data + clientName)
+                this.drawTouchs(JSON.parse(data), 'red')
+            })
+            rtcPeers[clientName] = newPeer
+            this.setState({
+                rtcPeers: rtcPeers
+            }, ()=>{console.log(rtcPeers)})
+        }
+    this.setState({rtcPeers: rtcPeers}, this.initCanvas)
     }
     initPeers = () => {
-        const {room} = {...this.state}
-        const rtcPeers = {}
+        const {room, rtcPeers} = {...this.state}
         room.clients && room.clients.map( client => {
             let newPeer = new Peer({initiator: true, trickle: true, 
                 config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'turn:relay.backups.cz', username: 'webrtc', credential: 'webrtc' }] },
@@ -71,35 +115,7 @@ export default class Canvas extends React.Component{
             })
             rtcPeers[client.name] = newPeer
         })
-        this.state.socket.on('signal', (data, clientName, remoteSocket) => {
-            console.log('signal! clientName: ', clientName)
-            const {rtcPeers} = this.state
-            if(rtcPeers[clientName]){
-                console.log('rtcpeers[',clientName,'] exists')
-                rtcPeers[clientName].signal(data)
-            }
-            else{
-                console.log('else')
-                let newPeer = new Peer({initiator: false, trickle: true, wrtc})
-                newPeer.clientName = clientName
-                newPeer.on('signal', data => {this.forwardSignal(data, this.state.myName, remoteSocket)})
-                newPeer.signal(data)
-                newPeer.on('connect', () => {
-                    console.log('CONNECT')
-                    this.setState({connectedPeers: this.state.connectedPeers+1})
-                })
-                newPeer.on('data', data => {
-                    console.log('data: ' + data + clientName)
-                    this.drawTouchs(JSON.parse(data), 'red')
-                })
-                rtcPeers[clientName] = newPeer
-                console.log(clientName)
-                this.setState({
-                    rtcPeers
-                }, ()=>{console.log(rtcPeers)})
-            }
-        })
-        this.setState({rtcPeers}, this.initCanvas)
+        this.setState({rtcPeers: rtcPeers})
     }
     forwardSignal = (signal, myName, remoteSocket) => {
         const {socket} = this.state
@@ -111,20 +127,45 @@ export default class Canvas extends React.Component{
     touchStart = (evt) => {
         evt.preventDefault()
         if(this.state.myName === this.state.currentLeader){
-            const {pageX: x, pageY: y} = evt.changedTouches[0]
+            const rect = evt.target.getBoundingClientRect()
+            const x = evt.targetTouches[0].pageX - rect.left
+            const y = evt.targetTouches[0].pageY - rect.top
             this.setState({lastPos: {x, y}})
+        }
+    }
+    mouseDown = (evt) => {
+        evt.preventDefault()
+        if(this.state.myName === this.state.currentLeader){
+            const x = evt.nativeEvent.offsetX
+            const y = evt.nativeEvent.offsetY
+            this.setState({lastPos: {x, y}, isMouseDrawing: true})
         }
     }
     touchMove = (evt) => {
         evt.preventDefault()
-        const myCanvas = this.state.canvasRef.current
         if(this.state.myName === this.state.currentLeader){
-            const touchs = evt.changedTouches
-            const touchsXY = {lastPos: this.state.lastPos, x: touchs[0].pageX - myCanvas.offsetLeft, y: touchs[0].pageY - myCanvas.offsetTop}
+            const rect = evt.target.getBoundingClientRect()
+            const x = evt.targetTouches[0].pageX - rect.left
+            const y = evt.targetTouches[0].pageY - rect.top
+
+            const touchsXY = {lastPos: this.state.lastPos, x, y}
             this.sendTouchs(JSON.stringify(touchsXY))
             this.drawTouchs(touchsXY)
         }
         else console.log('you cant draw yet!')
+    }
+    mouseMove = (evt) => {
+        evt.preventDefault()
+        if(this.state.myName === this.state.currentLeader && this.state.isMouseDrawing){
+            const x = evt.nativeEvent.offsetX
+            const y = evt.nativeEvent.offsetY
+            const touchsXY = {lastPos: this.state.lastPos, x, y}
+            this.sendTouchs(JSON.stringify(touchsXY))
+            this.drawTouchs(touchsXY)
+        }
+    }
+    mouseUp = (evt) => {
+        this.setState({isMouseDrawing: false})
     }
     drawTouchs = (touchs, color = 'blue', remote = false) => {
         const myCanvas = this.state.canvasRef.current
@@ -144,7 +185,7 @@ export default class Canvas extends React.Component{
         ctx.clearRect(0, 0, myCanvas.width, myCanvas.height);
     }
     sendTouchs = (touchs) => {
-        const {rtcPeers} = this.state
+        const {rtcPeers} = {...this.state}
         for(const peer in rtcPeers){
             if(rtcPeers[peer].connected){
                 rtcPeers[peer].send(touchs)
@@ -158,9 +199,12 @@ export default class Canvas extends React.Component{
     }
     handleChange = (e) => {
         e.preventDefault()
-        let cloneState = this.state
+        let cloneState = {...this.state}
         cloneState[e.target.name] = e.target.value
         this.setState(cloneState)
+    }
+    updateTime = () => {
+        this.setState({timer: new Date()})
     }
     render(){
         if(this.state.loading){
@@ -170,13 +214,12 @@ export default class Canvas extends React.Component{
                 <input type="text" name="myName" onChange={this.handleChange}/>
                 <button onClick={() => {
                     this.setState({loading: false})
-                    this.props.joinRoom(this.state.room.name, this.state.myName)
+                    this.socketJoinRoom()
                     this.initPeers()
                     }}>JOIN</button>
                 </div>                
             )
         }
-        console.log(this.state.connectedPeers > 0 || '<p>Waiting for peers..</p>')
         return( 
             <>
             { this.state.connectedPeers > 0 || <p>Waiting for peers..</p> }
@@ -187,12 +230,12 @@ export default class Canvas extends React.Component{
             {
                 this.state.chooseAWord &&
                 this.state.possibleWords.map( word => 
-                    <button onClick={()=>{this.chooseWord(word)}}>
+                    <button key={word} onClick={()=>{this.chooseWord(word)}}>
                         {word}
                     </button>                    
                 )
             }
-            <canvas style={{border: '1px solid black'}} ref={this.state.canvasRef} onTouchMove={this.touchMove} onTouchStart={this.touchStart} onTouchEnd={this.touchEnd} id="myCanvas" width='300' height='500'></canvas>
+            <canvas style={{border: '1px solid black'}} ref={this.state.canvasRef} onMouseDown={this.mouseDown} onMouseMove={this.mouseMove} onMouseUp={this.mouseUp} onTouchMove={this.touchMove} onTouchStart={this.touchStart} onTouchEnd={this.touchEnd} id="myCanvas" width='300' height='500'></canvas>
             <Chat room={this.state.room} socket={this.state.socket} myName={this.state.myName}/>
             </>) 
     }

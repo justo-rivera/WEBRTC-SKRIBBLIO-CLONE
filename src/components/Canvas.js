@@ -24,7 +24,7 @@ export default class Canvas extends React.Component{
         const {socket} = this.state
         axios.get(process.env.NODE_ENV === 'production' && `https://dibujio-server.herokuapp.com/api/room/${this.props.match.params.roomName}` || `http://localhost:5000/api/room/${this.props.match.params.roomName}`)
             .then( ({data: room}) => {
-                this.setState({room: room})//, this.initPeers)
+                this.setState({room: room}, this.initPeers)
             })
         socket.on('assigned name', newName=>{
             this.setState({myName: newName})
@@ -37,7 +37,7 @@ export default class Canvas extends React.Component{
         })
         socket.on('new client', client => {
             const {room} = {...this.state}
-            console.log(room)
+            //this.newClient(client)
             // if(!room.clients) room.clients = []
             // room.clients.push(client)
             // this.setState({room: room})
@@ -58,9 +58,13 @@ export default class Canvas extends React.Component{
         const { room, myName} = {...this.state}
         socket.emit('join room', {selectedRoom: room.name, clientName: myName, isLeader: false})
     }
+
     createPeer = (data, clientName, remoteSocket) => {
         
         const {rtcPeers} = {...this.state}
+        if(rtcPeers[clientName] && rtcPeers[clientName].destroyed){
+            delete rtcPeers[clientName]
+        }
         if(rtcPeers[clientName]){
             console.log('rtcpeers[',clientName,'] exists')
             // console.log(this.state.rtcPeers)
@@ -207,19 +211,6 @@ export default class Canvas extends React.Component{
         this.setState({timer: new Date()})
     }
     render(){
-        if(this.state.loading){
-            return(
-                <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                <p>Name:</p>
-                <input type="text" name="myName" onChange={this.handleChange}/>
-                <button onClick={() => {
-                    this.setState({loading: false})
-                    this.socketJoinRoom()
-                    this.initPeers()
-                    }}>JOIN</button>
-                </div>                
-            )
-        }
         return( 
             <>
             { this.state.connectedPeers > 0 || <p>Waiting for peers..</p> }

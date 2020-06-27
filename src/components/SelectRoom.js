@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import axios from 'axios'
 export default class SelectRoom extends React.Component{
     state = {
@@ -34,7 +35,7 @@ export default class SelectRoom extends React.Component{
             <ul>
                 {
                     this.state.rooms && this.state.rooms.map( room => 
-                        <li key={room}>{room}</li>
+                        <li key={room}><Link to={`/room/${room}`}>{room}</Link></li>
                     )
                 }
             </ul>

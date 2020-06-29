@@ -1,16 +1,20 @@
 .palette td {
-    width: 8vw;
-    height: 8vw;
+    width: 5vw;
+    height: 5vh;
   }
 .palette-eraser {
     background-image: url("images/eraser.png");
     background-size: 8vw 8vw;
 }
-.chat {
-    height: 12vh;
+canvas {
+    width: 96%;
+    height: 80%;
+}
+/* .chat {
+    height: calc(var(--vh, 1vh) * 12);
     overflow-y: scroll;
 }
-canvas {
-    width: 99vw;
-    height: 70vh;
-}
+
+.roomDraw {
+    font-size: 16px;
+} */

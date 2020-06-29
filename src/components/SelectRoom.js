@@ -9,7 +9,7 @@ export default class SelectRoom extends React.Component{
         loading: true,
     }
     componentDidMount(){
-        axios.get((process.env.NODE_ENV === 'production' && 'https://dibujio-server.herokuapp.com' || 'http://localhost:5000') + '/api/rooms')
+        axios.get((process.env.NODE_ENV === 'production' && 'https://dibujio-server.herokuapp.com' || 'http://192.168.1.4:5000') + '/api/rooms')
             .then( ({data: rooms}) => {
                 this.setState({rooms: rooms.map( room => room.name), loading: false})
             })

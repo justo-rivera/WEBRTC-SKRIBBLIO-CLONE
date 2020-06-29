@@ -3,7 +3,6 @@ import Peer from 'simple-peer'
 import wrtc from 'wrtc'
 import axios from 'axios'
 import Chat from './Chat'
-import eraser from '../images/eraser.png'
 import '../canvas.css'
 export default class Canvas extends React.Component{
     state = {
@@ -27,8 +26,18 @@ export default class Canvas extends React.Component{
         loading: !this.props.name
     }
     componentDidMount(){
+        const myCanvas = this.state.canvasRef.current
+        myCanvas.width = window.innerWidth
+        myCanvas.height = window.innerHeight * 0.7
+        myCanvas.addEventListener("touchmove", this.touchMove, {passive: false})
+        myCanvas.addEventListener("touchstart", this.touchStart, {passive: false})
         const {socket} = this.state
-        axios.get(process.env.NODE_ENV === 'production' && `https://dibujio-server.herokuapp.com/api/room/${this.props.match.params.roomName}` || `http://localhost:5000/api/room/${this.props.match.params.roomName}`)
+        let vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+        const vw = window.innerWidth * 0.01;
+        document.documentElement.style.setProperty('--vw', `${vw}px`);
+
+        axios.get(process.env.NODE_ENV === 'production' && `https://dibujio-server.herokuapp.com/api/room/${this.props.match.params.roomName}` || `http://192.168.1.4:5000/api/room/${this.props.match.params.roomName}`)
             .then( ({data: room}) => {
                 this.setState({room: room}, this.initPeers)
             })
@@ -273,38 +282,40 @@ export default class Canvas extends React.Component{
     selectEraser = (evt) => {
         this.setState({color: 'white', lineWidth: '24'})
     }
+    resizeCanvas = (evt) => {
+    }
     render(){
         return( 
-            <>
+            <div className="roomDraw">
             { this.state.connectedPeers > 0 || <p>Waiting for peers..</p> }
             { this.state.connectedPeers > 0 && <><p>{this.state.currentLeader} is drawing... {Math.floor((this.state.timeFinish - this.state.timer)/1000)} seconds left</p>
             </>
             }
-            {
-                this.state.chooseAWord &&
+            {this.state.chooseAWord &&
                 this.state.possibleWords.map( word => 
                     <button key={word} onClick={()=>{this.chooseWord(word)}}>
                         {word}
                     </button>                    
                 )
             }
-            <div style={{display: 'none', width: '99vw', height: '70vh'}} ref={this.state.rankingRef}>
+            <div style={{display: 'none', width: window.innerWidth, height: window.innerHeight*0.7}} ref={this.state.rankingRef}>
                 Ranking
             </div>
-            <canvas style={{border: '1px solid black'}} ref={this.state.canvasRef} onMouseDown={this.mouseDown} onMouseMove={this.mouseMove} onMouseUp={this.mouseUp} onTouchMove={this.touchMove} onTouchStart={this.touchStart} onTouchEnd={this.touchEnd} id="myCanvas" width='300' height='500'></canvas>
+            <canvas style={{border: '1px solid black'}} ref={this.state.canvasRef} onMouseDown={this.mouseDown} onMouseMove={this.mouseMove} onMouseUp={this.mouseUp} onTouchStart={this.touchStart} onTouchEnd={this.touchEnd} id="myCanvas" width='300' height='200'></canvas>
             <table className='palette'>
                 <tr>
-                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'black'}}></td>
-                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'grey'}}></td>
-                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'red'}}></td>
-                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'orange'}}></td>
-                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'yellow'}}></td>
-                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'green'}}></td>
-                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'cyan'}}></td>
-                    <td className='palette-eraser' onClick={this.selectEraser}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'black', height: window.innerWidth*0.08, width: window.innerWidth*0.08}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'grey', height: window.innerWidth*0.08, width: window.innerWidth*0.08}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'red', height: window.innerWidth*0.08, width: window.innerWidth*0.08}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'orange', height: window.innerWidth*0.08, width: window.innerWidth*0.08}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'greenyellow', height: window.innerWidth*0.08, width: window.innerWidth*0.08}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'green', height: window.innerWidth*0.08, width: window.innerWidth*0.08}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'magenta', height: window.innerWidth*0.08, width: window.innerWidth*0.08}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'cyan', height: window.innerWidth*0.08, width: window.innerWidth*0.08}}></td>
+                    <td className='palette-eraser' style={{height: window.innerWidth*0.08, width: window.innerWidth*0.08}} onClick={this.selectEraser}></td>
                 </tr>
             </table>
-            <Chat room={this.state.room} socket={this.state.socket} myName={this.state.myName}/>
-            </>) 
+            <Chat style={{maxHeight: window.innerHeight * 0.04}} room={this.state.room} socket={this.state.socket} myName={this.state.myName}/>
+            </div>) 
     }
 }

@@ -238,7 +238,7 @@ export default class Canvas extends React.Component{
     displayRanking = () => {
         let myCanvas = this.state.canvasRef.current
         let rankingDiv = this.state.rankingRef.current
-        let rankingList = this.state.ranking.map( r => `<li>${r.client.name}: ${r.points}</li>`)
+        let rankingList = this.state.ranking.map( r => `<li>${r.client}: ${r.points}</li>`)
         rankingDiv.innerHTML = `Ranking: <ul> ${rankingList.join('')} </ul>`
         myCanvas.style.display = 'none'
         rankingDiv.style.display = 'block'

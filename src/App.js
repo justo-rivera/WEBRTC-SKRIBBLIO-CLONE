@@ -3,7 +3,7 @@ import {Switch, Route, withRouter} from 'react-router-dom'
 import io from 'socket.io-client'
 import SelectRoom from './components/SelectRoom'
 import WaitingRoom from './components/WaitingRoom'
-import Canvas from './components/Canvas'
+import './App.css'
 
 class App extends React.Component {
   state = {

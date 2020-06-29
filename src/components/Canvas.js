@@ -3,6 +3,8 @@ import Peer from 'simple-peer'
 import wrtc from 'wrtc'
 import axios from 'axios'
 import Chat from './Chat'
+import eraser from '../images/eraser.png'
+import '../canvas.css'
 export default class Canvas extends React.Component{
     state = {
         socket: this.props.socket,
@@ -11,13 +13,17 @@ export default class Canvas extends React.Component{
         possibleWords: [],
         room: {name: this.props.match.params.roomName, clients: []},
         currentLeader: null,
+        ranking: [],
         gameHasStarted: false,
         rtcPeers: [],
         connectedPeers: 0,
         lastPos: {},
+        color: 'black',
+        lineWidth: '6',
         isMouseDrawing: false,
         remoteLastPos: [],
         canvasRef: React.createRef(),
+        rankingRef: React.createRef(),
         loading: !this.props.name
     }
     componentDidMount(){
@@ -29,14 +35,18 @@ export default class Canvas extends React.Component{
         socket.on('assigned name', newName=>{
             this.setState({myName: newName})
         })
-        socket.on('new leader', leader => {
+        socket.on('joined', ({currentLeader, timeFinish}) => {
+            this.setState({currentLeader, timeFinish: Date.parse(timeFinish)})
+        })
+        socket.on('new leader', data => {
             // let {room} = {...this.state}
             // room.leader = leader
+            const isFirstLeader = this.state.currentLeader
             this.clearCanvas()
-            this.setState({currentLeader: leader})
+            this.setState({currentLeader: data.leader, ranking: data.ranking}, () => {
+                if(isFirstLeader) this.displayRanking() })
         })
         socket.on('new client', client => {
-            const {room} = {...this.state}
             //this.newClient(client)
             // if(!room.clients) room.clients = []
             // room.clients.push(client)
@@ -81,6 +91,12 @@ export default class Canvas extends React.Component{
             newPeer.on('signal', data => {this.forwardSignal(data, this.state.myName, remoteSocket)})
             newPeer.on('connect', () => {
                 console.log('CONNECT')
+                if(this.state.currentLeader === this.state.myName){
+                    const myCanvas = this.state.canvasRef.current
+                    const image = myCanvas.toDataURL()
+                    const data = {type: 'image', image}
+                    newPeer.send(JSON.stringify(data))
+                }
                 this.setState({connectedPeers: this.state.connectedPeers+1})
             })
             newPeer.on('data', data => {
@@ -110,12 +126,17 @@ export default class Canvas extends React.Component{
                 this.state.socket.emit('2 clients connected', {client1: this.state.myName, client2: client.name})
                 this.setState({connectedPeers: this.state.connectedPeers+1})
             })
-            newPeer.on('data', data => {
-                console.log('data: ' + data + client.name)
-                if(newPeer.clientName === this.state.currentLeader){
-                    this.drawTouchs(JSON.parse(data), 'red')
+            newPeer.on('data', dataJSON => {
+                const data = JSON.parse(dataJSON)
+                console.log('raw data', dataJSON)
+                if(data.type === 'image'){
+                    console.log('image received..', data)
+                    this.paintBackupImage(data.image)
                 }
-                else console.log(newPeer.clientName, 'unsuccessfully tried to draw..')
+                else if(data.type === 'paint' && newPeer.clientName === this.state.currentLeader){
+                    this.drawTouchs(data, 'red')
+                }
+                else console.log(newPeer.clientName, 'unsuccessfully tried to draw..', data)
             })
             rtcPeers[client.name] = newPeer
         })
@@ -131,28 +152,33 @@ export default class Canvas extends React.Component{
     touchStart = (evt) => {
         evt.preventDefault()
         if(this.state.myName === this.state.currentLeader){
-            const rect = evt.target.getBoundingClientRect()
-            const x = evt.targetTouches[0].pageX - rect.left
-            const y = evt.targetTouches[0].pageY - rect.top
+            const myCanvas = this.state.canvasRef.current
+            const bounds = myCanvas.getBoundingClientRect()
+            const x = (evt.targetTouches[0].pageX - bounds.left)/(bounds.width)
+            const y = (evt.targetTouches[0].pageY - bounds.top)/(bounds.height)
+            console.log(x, 'bounds.width()-->', bounds.width)
             this.setState({lastPos: {x, y}})
         }
     }
     mouseDown = (evt) => {
         evt.preventDefault()
         if(this.state.myName === this.state.currentLeader){
-            const x = evt.nativeEvent.offsetX
-            const y = evt.nativeEvent.offsetY
+            const myCanvas = this.state.canvasRef.current
+            const bounds = myCanvas.getBoundingClientRect()
+            const x = (evt.nativeEvent.pageX - bounds.left)/(bounds.width)
+            const y = (evt.nativeEvent.pageY - bounds.top)/(bounds.height)
             this.setState({lastPos: {x, y}, isMouseDrawing: true})
         }
     }
     touchMove = (evt) => {
         evt.preventDefault()
         if(this.state.myName === this.state.currentLeader){
-            const rect = evt.target.getBoundingClientRect()
-            const x = evt.targetTouches[0].pageX - rect.left
-            const y = evt.targetTouches[0].pageY - rect.top
-
-            const touchsXY = {lastPos: this.state.lastPos, x, y}
+            const myCanvas = this.state.canvasRef.current
+            const bounds = myCanvas.getBoundingClientRect()
+            const x = (evt.targetTouches[0].pageX - bounds.left)/(bounds.width)
+            const y = (evt.targetTouches[0].pageY - bounds.top)/(bounds.height)
+            console.log(x,y)
+            const touchsXY = {type: 'paint', lastPos: this.state.lastPos, x, y, color: this.state.color, lineWidth: this.state.lineWidth}
             this.sendTouchs(JSON.stringify(touchsXY))
             this.drawTouchs(touchsXY)
         }
@@ -161,9 +187,12 @@ export default class Canvas extends React.Component{
     mouseMove = (evt) => {
         evt.preventDefault()
         if(this.state.myName === this.state.currentLeader && this.state.isMouseDrawing){
-            const x = evt.nativeEvent.offsetX
-            const y = evt.nativeEvent.offsetY
-            const touchsXY = {lastPos: this.state.lastPos, x, y}
+            const myCanvas = this.state.canvasRef.current
+            const bounds = myCanvas.getBoundingClientRect()
+            const x = (evt.nativeEvent.pageX - bounds.left)/(bounds.width)
+            const y = (evt.nativeEvent.pageY - bounds.top)/(bounds.height)
+            console.log(x,y)
+            const touchsXY = {type: 'paint',lastPos: this.state.lastPos, x, y}
             this.sendTouchs(JSON.stringify(touchsXY))
             this.drawTouchs(touchsXY)
         }
@@ -171,22 +200,22 @@ export default class Canvas extends React.Component{
     mouseUp = (evt) => {
         this.setState({isMouseDrawing: false})
     }
-    drawTouchs = (touchs, color = 'blue', remote = false) => {
+    drawTouchs = (touchs, remote = false) => {
         const myCanvas = this.state.canvasRef.current
         const ctx = myCanvas.getContext('2d')
+        const lastX = touchs.lastPos.x * myCanvas.width
+        const lastY = touchs.lastPos.y * myCanvas.height
+        const x = touchs.x * myCanvas.width
+        const y = touchs.y * myCanvas.height
+        ctx.globalCompositeOperation = 'source-over'
         ctx.lineCap = 'round'
-        ctx.lineWidth = '6'
+        ctx.lineWidth = touchs.lineWidth
         ctx.beginPath()
-        ctx.strokeStyle = color
-        ctx.moveTo(touchs.lastPos.x, touchs.lastPos.y)
-        ctx.lineTo(touchs.x, touchs.y)
+        ctx.strokeStyle = touchs.color
+        ctx.moveTo(lastX, lastY)
+        ctx.lineTo(x, y)
         ctx.stroke()
         this.setState({lastPos: {x: touchs.x, y: touchs.y}})
-    }
-    clearCanvas = () => {
-        const myCanvas = this.state.canvasRef.current
-        const ctx = myCanvas.getContext('2d')
-        ctx.clearRect(0, 0, myCanvas.width, myCanvas.height);
     }
     sendTouchs = (touchs) => {
         const {rtcPeers} = {...this.state}
@@ -195,6 +224,33 @@ export default class Canvas extends React.Component{
                 rtcPeers[peer].send(touchs)
             }
         }
+    }
+    paintBackupImage = (imageURI) => {
+        const myCanvas = this.state.canvasRef.current
+        const ctx = myCanvas.getContext('2d')
+        let image = new Image()
+        image.onload = () => {
+            ctx.globalCompositeOperation = 'destination-over'
+            ctx.drawImage(image, 0, 0)
+        }
+        image.src = imageURI
+    }
+    displayRanking = () => {
+        let myCanvas = this.state.canvasRef.current
+        let rankingDiv = this.state.rankingRef.current
+        let rankingList = this.state.ranking.map( r => `<li>${r.client.name}: ${r.points}</li>`)
+        rankingDiv.innerHTML = `Ranking: <ul> ${rankingList.join('')} </ul>`
+        myCanvas.style.display = 'none'
+        rankingDiv.style.display = 'block'
+        setTimeout( () => {
+            myCanvas.style.display = 'block'
+            rankingDiv.style.display = 'none'
+        }, 8*1000)
+    }
+    clearCanvas = () => {
+        const myCanvas = this.state.canvasRef.current
+        const ctx = myCanvas.getContext('2d')
+        ctx.clearRect(0, 0, myCanvas.width, myCanvas.height);
     }
     chooseWord = (word) =>{
         const {socket} = this.state
@@ -210,12 +266,18 @@ export default class Canvas extends React.Component{
     updateTime = () => {
         this.setState({timer: new Date()})
     }
+    changeColor = (evt) => {
+        const color = evt.target.style.backgroundColor;
+        this.setState({color, lineWidth: '6'})
+    }
+    selectEraser = (evt) => {
+        this.setState({color: 'white', lineWidth: '24'})
+    }
     render(){
         return( 
             <>
             { this.state.connectedPeers > 0 || <p>Waiting for peers..</p> }
-            { this.state.connectedPeers > 0 && <><p>{this.state.currentLeader} is drawing</p> 
-                <p>{Math.floor((this.state.timeFinish - this.state.timer)/1000)} seconds left</p>
+            { this.state.connectedPeers > 0 && <><p>{this.state.currentLeader} is drawing... {Math.floor((this.state.timeFinish - this.state.timer)/1000)} seconds left</p>
             </>
             }
             {
@@ -226,7 +288,22 @@ export default class Canvas extends React.Component{
                     </button>                    
                 )
             }
+            <div style={{display: 'none', width: '99vw', height: '70vh'}} ref={this.state.rankingRef}>
+                Ranking
+            </div>
             <canvas style={{border: '1px solid black'}} ref={this.state.canvasRef} onMouseDown={this.mouseDown} onMouseMove={this.mouseMove} onMouseUp={this.mouseUp} onTouchMove={this.touchMove} onTouchStart={this.touchStart} onTouchEnd={this.touchEnd} id="myCanvas" width='300' height='500'></canvas>
+            <table className='palette'>
+                <tr>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'black'}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'grey'}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'red'}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'orange'}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'yellow'}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'green'}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'cyan'}}></td>
+                    <td className='palette-eraser' onClick={this.selectEraser}></td>
+                </tr>
+            </table>
             <Chat room={this.state.room} socket={this.state.socket} myName={this.state.myName}/>
             </>) 
     }

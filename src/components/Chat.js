@@ -34,7 +34,7 @@ export default class Chat extends React.Component{
         <form onSubmit={this.sendMessage}>
         <input type="text" name="inputMessage" onChange={this.handleChange} placeholder="type your guess here..."/>
         </form>
-        <div style={{maxHeight: '200px', backgroundColor: 'red', overflowY: 'scroll'}} className="chat">
+        <div className="chat">
         {
             this.state.messages.map((message,i) => {
                 if(message.type === 'guess') return <p key={'message-'+i}>{message.name} guessed the word!</p>

@@ -1,0 +1,16 @@
+.palette td {
+    width: 8vw;
+    height: 8vw;
+  }
+.palette-eraser {
+    background-image: url("images/eraser.png");
+    background-size: 8vw 8vw;
+}
+.chat {
+    max-height: 80px;
+    overflow-y: scroll;
+}
+canvas {
+    width: 99vw;
+    height: 70vh;
+}

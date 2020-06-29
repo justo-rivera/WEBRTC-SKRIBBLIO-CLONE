@@ -7,7 +7,7 @@
     background-size: 8vw 8vw;
 }
 .chat {
-    max-height: 80px;
+    height: 12vh;
     overflow-y: scroll;
 }
 canvas {

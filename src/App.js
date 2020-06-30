@@ -47,12 +47,10 @@ class App extends React.Component {
   }
   handleSignUp = (e) => {
     e.preventDefault()
-    let name = e.target.name.value;
-    let username = e.target.username.value
+    let name = e.target.name.value
     let password = e.target.password.value
     axios.post(`${config.REACT_APP_PROFILE_URL}/signup`, {
       name: name,
-      username: username,
       password: password
     }, { withCredentials: true})
     .then((res) => {

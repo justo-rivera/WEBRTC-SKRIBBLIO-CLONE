@@ -1,16 +1,12 @@
 import React from 'react';
+import 'bootstrap/dist/css/bootstrap.css'
 
 export default function SignUp(props){
     return (
         <form onSubmit={props.onSignUp}>
             <div className="form-group">
-                <label htmlFor="exampleInputUsername">Username</label>
-                <input type="text" className="form-control" id="exampleInputUsername" name="username" />
-            </div>
-            <div className="form-group">
-                <label htmlFor="exampleInputEmail1">Email address</label>
-                <input type="email" className="form-control" id="exampleInputEmail1" name="email" aria-describedby="emailHelp" />
-                <small id="emailHelp" className="form-text text-muted">We'll never share your email with anyone else.</small>
+                <label htmlFor="exampleInputEmail1">Username</label>
+                <input type="text" className="form-control" id="exampleInputEmail1" name="namr" aria-describedby="emailHelp" />
             </div>
             <div className="form-group">
                 <label htmlFor="exampleInputPassword1">Password</label>

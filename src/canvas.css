@@ -1,7 +1,7 @@
-.palette td {
+/* .palette td {
     width: 5vw;
     height: 5vh;
-  }
+  } */
 .palette-eraser {
     background-image: url("images/eraser.png");
     background-size: 8vw 8vw;

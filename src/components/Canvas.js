@@ -27,15 +27,10 @@ export default class Canvas extends React.Component{
     }
     componentDidMount(){
         const myCanvas = this.state.canvasRef.current
-        myCanvas.width = window.innerWidth
-        myCanvas.height = window.innerHeight * 0.7
         myCanvas.addEventListener("touchmove", this.touchMove, {passive: false})
         myCanvas.addEventListener("touchstart", this.touchStart, {passive: false})
+        setTimeout(this.changeStyle, 0)
         const {socket} = this.state
-        let vh = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty('--vh', `${vh}px`);
-        const vw = window.innerWidth * 0.01;
-        document.documentElement.style.setProperty('--vw', `${vw}px`);
 
         axios.get(process.env.NODE_ENV === 'production' && `https://dibujio-server.herokuapp.com/api/room/${this.props.match.params.roomName}` || `http://192.168.1.4:5000/api/room/${this.props.match.params.roomName}`)
             .then( ({data: room}) => {
@@ -282,7 +277,19 @@ export default class Canvas extends React.Component{
     selectEraser = (evt) => {
         this.setState({color: 'white', lineWidth: '24'})
     }
-    resizeCanvas = (evt) => {
+    changeStyle = () => {
+        document.querySelectorAll('.palette-color').forEach( c => {
+            c.style.width = window.innerWidth * 0.08 + 'px'
+            c.style.height = window.innerWidth * 0.08 + 'px'
+        })
+        document.getElementById('eraser').style.width = window.innerWidth * 0.08 + 'px'
+        document.getElementById('eraser').style.height = window.innerWeight * 0.08 + 'px'
+        const myCanvas = this.state.canvasRef.current
+        myCanvas.width = window.innerWidth
+        myCanvas.height = window.innerHeight * 0.7
+        const ranking = document.getElementById('ranking')
+        ranking.style.width = window.innerWidth
+        ranking.style.height = window.innerHeight * 0.7
     }
     render(){
         return( 
@@ -298,21 +305,21 @@ export default class Canvas extends React.Component{
                     </button>                    
                 )
             }
-            <div style={{display: 'none', width: window.innerWidth, height: window.innerHeight*0.7}} ref={this.state.rankingRef}>
+            <div id='ranking' style={{display: 'none', width: window.innerWidth, height: window.innerHeight*0.7}} ref={this.state.rankingRef}>
                 Ranking
             </div>
             <canvas style={{border: '1px solid black'}} ref={this.state.canvasRef} onMouseDown={this.mouseDown} onMouseMove={this.mouseMove} onMouseUp={this.mouseUp} onTouchStart={this.touchStart} onTouchEnd={this.touchEnd} id="myCanvas" width='300' height='200'></canvas>
             <table className='palette'>
                 <tr>
-                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'black', height: window.innerWidth*0.08, width: window.innerWidth*0.08}}></td>
-                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'grey', height: window.innerWidth*0.08, width: window.innerWidth*0.08}}></td>
-                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'red', height: window.innerWidth*0.08, width: window.innerWidth*0.08}}></td>
-                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'orange', height: window.innerWidth*0.08, width: window.innerWidth*0.08}}></td>
-                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'greenyellow', height: window.innerWidth*0.08, width: window.innerWidth*0.08}}></td>
-                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'green', height: window.innerWidth*0.08, width: window.innerWidth*0.08}}></td>
-                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'magenta', height: window.innerWidth*0.08, width: window.innerWidth*0.08}}></td>
-                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'cyan', height: window.innerWidth*0.08, width: window.innerWidth*0.08}}></td>
-                    <td className='palette-eraser' style={{height: window.innerWidth*0.08, width: window.innerWidth*0.08}} onClick={this.selectEraser}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'black'}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'grey'}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'red'}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'orange'}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'greenyellow'}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'green'}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'magenta'}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'cyan'}}></td>
+                    <td className='palette-eraser' id='eraser' onClick={this.selectEraser}></td>
                 </tr>
             </table>
             <Chat style={{maxHeight: window.innerHeight * 0.04}} room={this.state.room} socket={this.state.socket} myName={this.state.myName}/>

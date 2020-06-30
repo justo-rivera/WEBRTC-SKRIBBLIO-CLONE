@@ -1,3 +1,4 @@
+import config from '../config'
 import React from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
@@ -9,7 +10,7 @@ export default class SelectRoom extends React.Component{
         loading: true,
     }
     componentDidMount(){
-        axios.get((process.env.NODE_ENV === 'production' && 'https://dibujio-server.herokuapp.com' || 'http://192.168.1.4:5000') + '/api/rooms')
+        axios.get(`${config.API_URL}/rooms`)
             .then( ({data: rooms}) => {
                 this.setState({rooms: rooms.map( room => room.name), loading: false})
             })

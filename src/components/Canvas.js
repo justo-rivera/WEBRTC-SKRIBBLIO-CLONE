@@ -1,4 +1,5 @@
 import React, { useRef } from 'react'
+import config from '../config'
 import Peer from 'simple-peer'
 import wrtc from 'wrtc'
 import axios from 'axios'
@@ -33,7 +34,7 @@ export default class Canvas extends React.Component{
         setTimeout(this.changeStyle, 0)
         const {socket} = this.state
 
-        axios.get(`${process.env.REACT_APP_API_URL}/room/${this.props.match.params.roomName}`)
+        axios.get(`${config.API_URL}/room/${this.props.match.params.roomName}`)
             .then( ({data: room}) => {
                 this.setState({room: room}, this.initPeers)
             })

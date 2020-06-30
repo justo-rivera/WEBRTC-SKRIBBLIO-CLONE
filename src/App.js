@@ -17,7 +17,7 @@ class App extends React.Component {
     loading: true,
   }
   componentDidMount(){
-    const socket = io.connect(process.env.REACT_APP_SOCKET_URL)
+    const socket = io.connect(config.SOCKET_URL)
     this.setState({socket, loading: false})
     socket.on('assigned name', newName=>{
       console.log(newName)

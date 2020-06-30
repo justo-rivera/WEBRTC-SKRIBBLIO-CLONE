@@ -9,6 +9,8 @@ export default class Chat extends React.Component{
     componentDidMount(){
         const socket = this.state.socket
         const cloneMessages = this.state.messages
+        setTimeout(this.changeChatStyle, 0)
+        window.addEventListener('resize', this.changeChatStyle)
         socket.on('message', (name, message) => {
             cloneMessages.unshift({name, message, type: 'message'})
             this.setState({messages: cloneMessages})
@@ -24,6 +26,11 @@ export default class Chat extends React.Component{
         socket.emit('message', this.state.inputMessage)
         e.target.inputMessage.value = ''
     }
+    changeChatStyle = () => {
+        const chat = document.getElementById('chat')
+        chat.style.maxHeight = window.innerHeight * 0.12 + 'px'
+        chat.style.overflowY = 'scroll'
+    }
     handleChange = (e) => {
         e.preventDefault()
         this.setState({inputMessage: e.target.value})
@@ -34,7 +41,7 @@ export default class Chat extends React.Component{
         <form onSubmit={this.sendMessage}>
         <input type="text" name="inputMessage" onChange={this.handleChange} placeholder="type your guess here..."/>
         </form>
-        <div className="chat">
+        <div id="chat" className="chat">
         {
             this.state.messages.map((message,i) => {
                 if(message.type === 'guess') return <p key={'message-'+i}>{message.name} guessed the word!</p>

@@ -22,13 +22,14 @@ export default class Canvas extends React.Component{
         isMouseDrawing: false,
         remoteLastPos: [],
         canvasRef: React.createRef(),
-        rankingRef: React.createRef(),
+        chatRef: React.createRef(),
         loading: !this.props.name
     }
     componentDidMount(){
         const myCanvas = this.state.canvasRef.current
-        myCanvas.addEventListener("touchmove", this.touchMove, {passive: false})
-        myCanvas.addEventListener("touchstart", this.touchStart, {passive: false})
+        myCanvas.addEventListener('touchmove', this.touchMove, {passive: false})
+        myCanvas.addEventListener('touchstart', this.touchStart, {passive: false})
+        window.addEventListener('resize', this.changeStyle)
         setTimeout(this.changeStyle, 0)
         const {socket} = this.state
 
@@ -322,7 +323,7 @@ export default class Canvas extends React.Component{
                     <td className='palette-eraser' id='eraser' onClick={this.selectEraser}></td>
                 </tr>
             </table>
-            <Chat style={{maxHeight: window.innerHeight * 0.04}} room={this.state.room} socket={this.state.socket} myName={this.state.myName}/>
+            <Chat ref={this.state.chatRef} room={this.state.room} socket={this.state.socket} myName={this.state.myName}/>
             </div>) 
     }
 }

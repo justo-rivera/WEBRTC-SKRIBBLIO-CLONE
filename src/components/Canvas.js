@@ -12,6 +12,7 @@ export default class Canvas extends React.Component{
         chooseAWord: false,
         possibleWords: [],
         room: {name: this.props.match.params.roomName, clients: []},
+        lastWord: '',
         currentLeader: null,
         ranking: [],
         gameHasStarted: false,
@@ -24,6 +25,7 @@ export default class Canvas extends React.Component{
         remoteLastPos: [],
         canvasRef: React.createRef(),
         chatRef: React.createRef(),
+        rankingRef: React.createRef(),
         loading: !this.props.name
     }
     componentDidMount(){
@@ -47,10 +49,10 @@ export default class Canvas extends React.Component{
         socket.on('new leader', data => {
             // let {room} = {...this.state}
             // room.leader = leader
-            const isFirstLeader = this.state.currentLeader
+            const isNotFirstLeader = this.state.currentLeader
             this.clearCanvas()
-            this.setState({currentLeader: data.leader, ranking: data.ranking}, () => {
-                if(isFirstLeader) this.displayRanking() })
+            this.setState({currentLeader: data.leader, ranking: data.ranking, lastWord: data.lastWord}, () => {
+                if(isNotFirstLeader) this.displayRanking() })
         })
         socket.on('new client', client => {
             //this.newClient(client)
@@ -245,7 +247,7 @@ export default class Canvas extends React.Component{
         let myCanvas = this.state.canvasRef.current
         let rankingDiv = this.state.rankingRef.current
         let rankingList = this.state.ranking.map( r => `<li>${r.client}: ${r.points}</li>`)
-        rankingDiv.innerHTML = `Ranking: <ul> ${rankingList.join('')} </ul>`
+        rankingDiv.innerHTML = `Last word was <b>${this.state.lastWord}</b><br/>Ranking: <ul> ${rankingList.join('')} </ul>`
         myCanvas.style.display = 'none'
         rankingDiv.style.display = 'block'
         setTimeout( () => {
@@ -280,18 +282,21 @@ export default class Canvas extends React.Component{
         this.setState({color: 'white', lineWidth: '24'})
     }
     changeStyle = () => {
-        document.querySelectorAll('.palette-color').forEach( c => {
-            c.style.width = window.innerWidth * 0.08 + 'px'
-            c.style.height = window.innerWidth * 0.08 + 'px'
-        })
-        document.getElementById('eraser').style.width = window.innerWidth * 0.08 + 'px'
-        document.getElementById('eraser').style.height = window.innerWeight * 0.08 + 'px'
-        const myCanvas = this.state.canvasRef.current
-        myCanvas.width = window.innerWidth
-        myCanvas.height = window.innerHeight * 0.7
-        const ranking = document.getElementById('ranking')
-        ranking.style.width = window.innerWidth
-        ranking.style.height = window.innerHeight * 0.7
+        console.log(window.innerWidth)
+        if(window.innerWidth < 1001){
+            document.querySelectorAll('.palette-color').forEach( c => {
+                c.style.width = window.innerWidth * 0.08 + 'px'
+                c.style.height = window.innerWidth * 0.08 + 'px'
+            })
+            document.getElementById('eraser').style.width = window.innerWidth * 0.08 + 'px'
+            document.getElementById('eraser').style.height = window.innerWidth * 0.08 + 'px'
+            const myCanvas = this.state.canvasRef.current
+            myCanvas.width = window.innerWidth
+            myCanvas.height = window.innerHeight * 0.7
+            const ranking = document.getElementById('ranking')
+            ranking.style.width = window.innerWidth
+            ranking.style.height = window.innerHeight * 0.7
+        }
     }
     render(){
         return( 
@@ -315,6 +320,7 @@ export default class Canvas extends React.Component{
                 <tr>
                     <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'black'}}></td>
                     <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'grey'}}></td>
+                    <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'yellow'}}></td>
                     <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'red'}}></td>
                     <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'orange'}}></td>
                     <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'greenyellow'}}></td>

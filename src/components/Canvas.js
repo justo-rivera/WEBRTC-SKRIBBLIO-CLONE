@@ -33,7 +33,7 @@ export default class Canvas extends React.Component{
         setTimeout(this.changeStyle, 0)
         const {socket} = this.state
 
-        axios.get(process.env.NODE_ENV === 'production' && `https://dibujio-server.herokuapp.com/api/room/${this.props.match.params.roomName}` || `http://192.168.1.4:5000/api/room/${this.props.match.params.roomName}`)
+        axios.get(`${process.env.REACT_APP_API_URL}/room/${this.props.match.params.roomName}`)
             .then( ({data: room}) => {
                 this.setState({room: room}, this.initPeers)
             })

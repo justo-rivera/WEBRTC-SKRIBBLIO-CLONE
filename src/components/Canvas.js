@@ -26,7 +26,8 @@ export default class Canvas extends React.Component{
         canvasRef: React.createRef(),
         chatRef: React.createRef(),
         rankingRef: React.createRef(),
-        loading: !this.props.name
+        loading: !this.props.name,
+        innerHeight: null
     }
     componentDidMount(){
         const myCanvas = this.state.canvasRef.current
@@ -49,24 +50,29 @@ export default class Canvas extends React.Component{
         socket.on('new leader', data => {
             const isNotFirstLeader = this.state.currentLeader
             this.clearCanvas()
-            this.setState({currentLeader: data.leader, ranking: data.ranking, timeFinish: Date.parse(data.timeFinish), lastWord: data.lastWord}, () => {
+            this.setState({currentLeader: data.leader, ranking: data.ranking, color: 'black', lineWidth: '6', timeFinish: Date.parse(data.timeFinish), lastWord: data.lastWord}, () => {
                 if(isNotFirstLeader) this.displayRanking() })
         })
         socket.on('choose word', possibleWords => {
-            this.setState({chooseAWord: true, possibleWords})
+            this.setState({chooseAWord: true, possibleWords, word: ''})
         })
         socket.on('signal', (data, clientName, remoteSocket) => {
             this.createPeer(data, clientName, remoteSocket)
         })
         socket.on('client left', clientName => {
             const {rtcPeers} = {...this.state}
-            rtcPeers[clientName].destroy()
-            delete rtcPeers[clientName]
-            this.setState({rtcPeers, connectedPeers: this.state.connectedPeers-1})
+            if(rtcPeers[clientName]) {
+                rtcPeers[clientName].destroy()
+                delete rtcPeers[clientName]
+                this.setState({rtcPeers, connectedPeers: this.state.connectedPeers-1})
+            }
         })
         socket.on('room paused', () => {
             this.clearCanvas()
             this.setState({currentLeader: '', word: ''})
+        })
+        socket.on('game ended', ranking => {
+            this.setState({ranking}, this.endGame)
         })
     }
     socketJoinRoom = () =>{
@@ -74,7 +80,6 @@ export default class Canvas extends React.Component{
         const { room, myName} = {...this.state}
         socket.emit('join room', {selectedRoom: room.name, clientName: myName, isLeader: false})
     }
-
     createPeer = (data, clientName, remoteSocket) => {
         
         const {rtcPeers} = {...this.state}
@@ -114,7 +119,7 @@ export default class Canvas extends React.Component{
                 rtcPeers: rtcPeers
             }, ()=>{console.log(rtcPeers)})
         }
-    this.setState({rtcPeers: rtcPeers}, this.initCanvas)
+        this.setState({rtcPeers: rtcPeers}, this.initCanvas)
     }
     initPeers = () => {
         const {room, rtcPeers} = {...this.state}
@@ -195,7 +200,7 @@ export default class Canvas extends React.Component{
             const bounds = myCanvas.getBoundingClientRect()
             const x = (evt.nativeEvent.pageX - bounds.left)/(bounds.width)
             const y = (evt.nativeEvent.pageY - bounds.top)/(bounds.height)
-            const touchsXY = {type: 'paint',lastPos: this.state.lastPos, x, y}
+            const touchsXY = {type: 'paint', color: this.state.color, lineWidth: this.state.lineWidth, lastPos: this.state.lastPos, x, y}
             this.sendTouchs(JSON.stringify(touchsXY))
             this.drawTouchs(touchsXY)
         }
@@ -250,6 +255,21 @@ export default class Canvas extends React.Component{
             rankingDiv.style.display = 'none'
         }, 8*1000)
     }
+    endGame = () => {
+        const {rtcPeers} = {...this.state}
+        for(let peer of rtcPeers){
+            peer.destroy()
+            delete rtcPeers[peer]
+        }
+        this.setState({connectedPeers: 0})
+        let myCanvas = this.state.canvasRef.current
+        let rankingDiv = this.state.rankingRef.current
+        let rankingList = this.state.ranking.map( r => `<li>${r.client}: ${r.points}</li>`)
+        rankingDiv.innerHTML = `<h2>Game finished!</h2><br/>`
+        rankingDiv.innerHTML += `Last word was <b>${this.state.lastWord}</b><br/>Final Ranking: <ul> ${rankingList.join('')} </ul>`
+        myCanvas.style.display = 'none'
+        rankingDiv.style.display = 'block'
+    }
     clearCanvas = () => {
         const myCanvas = this.state.canvasRef.current
         const ctx = myCanvas.getContext('2d')
@@ -257,7 +277,7 @@ export default class Canvas extends React.Component{
     }
     chooseWord = (word) =>{
         const {socket} = this.state
-        this.setState({chooseAWord: false, possibleWords: []})
+        this.setState({chooseAWord: false, possibleWords: [], word})
         socket.emit('chose word', word)
     }
     handleChange = (e) => {
@@ -271,32 +291,61 @@ export default class Canvas extends React.Component{
     }
     changeColor = (evt) => {
         const color = evt.currentTarget.style.backgroundColor;
-        console.log(color)
         this.setState({color, lineWidth: '6'})
     }
     selectEraser = (evt) => {
         this.setState({color: 'white', lineWidth: '24'})
     }
     changeStyle = () => {
-            document.querySelectorAll('.palette-color').forEach( c => {
-                c.style.width = window.innerHeight * 0.1 + 'px'
-                c.style.height = window.innerHeight * 0.1 + 'px'
-            })
-            document.getElementById('eraser').style.width = window.innerHeight * 0.1 + 'px'
-            document.getElementById('eraser').style.height = window.innerHeight * 0.1 + 'px'
-            const myCanvas = this.state.canvasRef.current
-            myCanvas.width = (window.innerHeight * 0.7) * 9/19
-            myCanvas.height = window.innerHeight * 0.7
-            const ranking = document.getElementById('ranking')
-            ranking.style.width = window.innerWidth
-            ranking.style.height = window.innerHeight * 0.7
+        if(window.innerHeight !== this.state.innerHeight){
+            if(window.screen.height <= window.screen.width) this.changeStyleDesktop()
+            else this.changeStyleMobile()
+        }
+    }
+    changeStyleMobile = () => {
+        document.getElementById('eraser').style.backgroundSize = window.innerWidth * 0.08 + 'px' + ' ' + window.innerWidth * 0.08 + 'px'
+        const myCanvas = this.state.canvasRef.current
+        myCanvas.width = window.innerWidth * 0.95
+        myCanvas.height = window.innerHeight * 0.7
+        document.querySelectorAll('.palette-color').forEach( c => {
+            c.style.width = myCanvas.width * 0.08 + 'px'
+            c.style.height = window.innerWidth * 0.08 + 'px'
+        })
+        document.getElementById('eraser').style.width = window.innerWidth * 0.08 + 'px'
+        document.getElementById('eraser').style.height = window.innerWidth * 0.08 + 'px'
+        const ranking = document.getElementById('ranking')
+        ranking.style.width = window.innerWidth * 0.95 + 'px'
+        ranking.style.height = window.innerHeight * 0.7 + 'px'
+    }
+    changeStyleDesktop = () => {
+        this.setState({innerHeight: window.innerHeight})
+        document.querySelectorAll('.palette-color').forEach( c => {
+            c.style.width = window.innerHeight * 0.048 + 'px'
+            c.style.height = window.innerHeight * 0.048 + 'px'
+        })
+        document.getElementById('eraser').style.width = window.innerHeight * 0.048 + 'px'
+        document.getElementById('eraser').style.height = window.innerHeight * 0.048 + 'px'
+        document.getElementById('eraser').style.backgroundSize = window.innerHeight * 0.048 + 'px' + ' ' + window.innerHeight * 0.048 + 'px'
+        const myCanvas = this.state.canvasRef.current
+        myCanvas.width = window.innerHeight * 0.55
+        myCanvas.height = window.innerHeight * 0.70
+        const ranking = document.getElementById('ranking')
+        ranking.style.width = window.innerHeight * 0.55 + 'px'
+        ranking.style.height = window.innerHeight * 0.70 + 'px'
     }
     render(){
         return( 
+            <div id="draw-container">
             <div className="roomDraw">
             { this.state.connectedPeers > 0 || <p>Waiting for peers..</p> }
-            { this.state.connectedPeers > 0 && <><p>{this.state.currentLeader} is drawing... {Math.floor((this.state.timeFinish - this.state.timer)/1000)} seconds left</p>
+            { this.state.connectedPeers > 0 && this.state.myName !== this.state.currentLeader && <><p><b>{this.state.currentLeader}</b> is drawing... {Math.floor((this.state.timeFinish - this.state.timer)/1000)} seconds left</p>
             </>
+            }
+            { this.state.connectedPeers > 0 && this.state.myName === this.state.currentLeader && !this.state.chooseAWord && <><p>You are drawing <b>{this.state.word}</b>... {Math.floor((this.state.timeFinish - this.state.timer)/1000)} seconds left</p>
+            </>
+            }
+            {this.state.chooseAWord &&
+             <p>Choose a word:</p>
             }
             {this.state.chooseAWord &&
                 this.state.possibleWords.map( word => 
@@ -304,11 +353,14 @@ export default class Canvas extends React.Component{
                         {word}
                     </button>                    
                 )
-            }
-            <div id='ranking' style={{display: 'none', width: window.innerWidth, height: window.innerHeight*0.7}} ref={this.state.rankingRef}>
+            } 
+            {this.state.chooseAWord &&
+             <br/>
+            }           
+            <div id='ranking' style={{display: 'none'}} ref={this.state.rankingRef}>
                 Ranking
             </div>
-            <canvas style={{border: '1px solid black'}} ref={this.state.canvasRef} onMouseDown={this.mouseDown} onMouseMove={this.mouseMove} onMouseUp={this.mouseUp} onTouchStart={this.touchStart} onTouchEnd={this.touchEnd} id="myCanvas" width='300' height='200'></canvas>
+            <canvas style={{border: '1px solid black'}} ref={this.state.canvasRef} onMouseDown={this.mouseDown} onMouseMove={this.mouseMove} onMouseUp={this.mouseUp} id="myCanvas" width='300' height='200'></canvas>
             <table className='palette'>
             <tbody>
                 <tr>
@@ -326,6 +378,7 @@ export default class Canvas extends React.Component{
             </tbody>
             </table>
             <Chat ref={this.state.chatRef} room={this.state.room} socket={this.state.socket} myName={this.state.myName}/>
+            </div>
             </div>) 
     }
 }

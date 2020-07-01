@@ -1,55 +1,22 @@
-/* .palette td {
-    width: 5vw;
-    height: 5vh;
-  } */
-.palette-eraser {
-    background-image: url("images/eraser.png");
-    background-size: 8vw 8vw;
+body {
+    background-color: rgb(29, 29, 124);
+    color: white;
 }
 canvas {
-    width: 96%;
-    height: 80%;
+    background-color: white;
 }
-@media (min-width:961px)  {
-    body {
-        display: flex;
-        width: 380px;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-    }
-    .roomDraw {
-    }
-    .palette {
-    }
-    .palette-color {
-        width: 30.32px;
-        height: 30.32px;
-    }
-    .palette-eraser {
-        background-image: url("images/eraser.png");
-        background-size: 8vw 8vw;
-        width: 30.32px;
-        height: 30.32px;
-    }
-    #myCanvas {
-        width: 379px;
-        height: 407px;
-    }
-    #ranking {
-        width: 379px;
-        height: 407px;
-    }
-    #chat {
-        max-height: 90px;
-        overflow-y: scroll;
-    }
+table {
+    /* background-color: white */
 }
-/* .chat {
-    height: calc(var(--vh, 1vh) * 12);
-    overflow-y: scroll;
+.palette-eraser {
+    background-image: url("images/eraser.png");
+    background-repeat: no-repeat;
+    background-color: white;
 }
-
-.roomDraw {
-    font-size: 16px;
-} */
+#draw-container {
+    display: flex;
+    justify-content: center;
+}
+#chat {
+    scrollbar-color: dark;
+}

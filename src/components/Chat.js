@@ -40,8 +40,16 @@ export default class Chat extends React.Component{
     }
     changeChatStyle = () => {
         const chat = document.getElementById('chat')
-        chat.style.maxHeight = window.innerHeight * 0.12 + 'px'
-        chat.style.overflowY = 'scroll'
+        console.log(window.screen.width)
+        if(window.screen.height <= window.screen.width){ //Desktop
+            /* to be changed */
+            chat.style.maxHeight = window.innerHeight * 0.12 + 'px'
+            chat.style.overflowY = 'scroll'
+        }
+        else{
+            chat.style.maxHeight = window.innerHeight * 0.12 + 'px'
+            chat.style.overflowY = 'scroll'
+        }
     }
     handleChange = (e) => {
         e.preventDefault()
@@ -49,20 +57,20 @@ export default class Chat extends React.Component{
     }
     render(){
         return(
-        <>
+        <div id="chat-container">
         <form onSubmit={this.sendMessage}>
         <input type="text" name="inputMessage" onChange={this.handleChange} placeholder="type your guess here..."/>
         </form>
         <div id="chat" className="chat">
         {
             this.state.messages.map((message,i) => {
-                if(message.type === 'guess') return <p key={'message-'+i}>{message.name} guessed the word!</p>
+                if(message.type === 'guess') return <p key={'message-'+i} style={{color: 'greenyellow'}}><b>{message.name}</b> guessed the word!</p>
                 if(message.type === 'new client') return <p key={'message-'+i}>{message.name} joined the room!</p>
                 if(message.type === 'client left') return <p key={'message-'+i}>{message.name} left the room</p>
                 return <p key={'message-'+i}>{message.name}: {message.message}</p>
             })
         }
         </div>
-        </>)
+        </div>)
     }
 }

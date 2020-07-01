@@ -32,7 +32,8 @@ export default class SelectRoom extends React.Component{
         }
         return (
             <form onSubmit={this.joinRoom} >
-            <p>Rooms:</p>
+            {this.state.rooms && <p>Rooms:</p> }
+            {this.state.rooms || <p>No one is playing, create a room!</p>}
             <ul>
                 {
                     this.state.rooms && this.state.rooms.map( room => 
@@ -40,11 +41,9 @@ export default class SelectRoom extends React.Component{
                     )
                 }
             </ul>
-            <label htmlFor='selectedRoom'>room: </label>
+            <label htmlFor='selectedRoom'>Room name: </label><br/>
             <input onChange={this.handleChange} type='text' name='selectedRoom' id='selectedRoom'/>
-            <label htmlFor='clientName'>your name:</label>
-            <input onChange={this.handleChange} type='text' name='clientName' id='clientName'/>
-            <button type='submit'>join</button>
+            <button type='submit'>Create Room</button>
             </form>
         )
     }

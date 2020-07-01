@@ -38,37 +38,35 @@ export default class Canvas extends React.Component{
 
         axios.get(`${config.API_URL}/room/${this.props.match.params.roomName}`)
             .then( ({data: room}) => {
-                this.setState({room: room}, this.initPeers)
+                this.setState({room}, this.initPeers)
             })
-        socket.on('assigned name', newName=>{
+        socket.on('assigned name', newName => {
             this.setState({myName: newName})
         })
         socket.on('joined', ({currentLeader, timeFinish}) => {
             this.setState({currentLeader, timeFinish: Date.parse(timeFinish)})
         })
         socket.on('new leader', data => {
-            // let {room} = {...this.state}
-            // room.leader = leader
             const isNotFirstLeader = this.state.currentLeader
             this.clearCanvas()
-            this.setState({currentLeader: data.leader, ranking: data.ranking, lastWord: data.lastWord}, () => {
+            this.setState({currentLeader: data.leader, ranking: data.ranking, timeFinish: Date.parse(data.timeFinish), lastWord: data.lastWord}, () => {
                 if(isNotFirstLeader) this.displayRanking() })
-        })
-        socket.on('new client', client => {
-            //this.newClient(client)
-            // if(!room.clients) room.clients = []
-            // room.clients.push(client)
-            // this.setState({room: room})
-        })
-        socket.on('finish time', newTime => {
-            this.setState({timeFinish: Date.parse(newTime)})
         })
         socket.on('choose word', possibleWords => {
             this.setState({chooseAWord: true, possibleWords})
         })
         socket.on('signal', (data, clientName, remoteSocket) => {
-            // console.log('signal! clientName: ', clientName)
             this.createPeer(data, clientName, remoteSocket)
+        })
+        socket.on('client left', clientName => {
+            const {rtcPeers} = {...this.state}
+            rtcPeers[clientName].destroy()
+            delete rtcPeers[clientName]
+            this.setState({rtcPeers, connectedPeers: this.state.connectedPeers-1})
+        })
+        socket.on('room paused', () => {
+            this.clearCanvas()
+            this.setState({currentLeader: '', word: ''})
         })
     }
     socketJoinRoom = () =>{
@@ -82,15 +80,13 @@ export default class Canvas extends React.Component{
         const {rtcPeers} = {...this.state}
         if(rtcPeers[clientName] && rtcPeers[clientName].destroyed){
             delete rtcPeers[clientName]
+            this.setState({connectedPeers: this.state.connectedPeers-1})
         }
         if(rtcPeers[clientName]){
             console.log('rtcpeers[',clientName,'] exists')
-            // console.log(this.state.rtcPeers)
-            // console.log(rtcPeers)
             rtcPeers[clientName].signal(data)
         }
         else{
-            console.log('else')
             let newPeer = new Peer({initiator: false, trickle: true, 
                 config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'turn:relay.backups.cz', username: 'webrtc', credential: 'webrtc' }] },
                 wrtc})
@@ -98,7 +94,6 @@ export default class Canvas extends React.Component{
             newPeer.signal(data)
             newPeer.on('signal', data => {this.forwardSignal(data, this.state.myName, remoteSocket)})
             newPeer.on('connect', () => {
-                console.log('CONNECT')
                 if(this.state.currentLeader === this.state.myName){
                     const myCanvas = this.state.canvasRef.current
                     const image = myCanvas.toDataURL()
@@ -110,6 +105,9 @@ export default class Canvas extends React.Component{
             newPeer.on('data', data => {
                 console.log('data: ' + data + clientName)
                 this.drawTouchs(JSON.parse(data), 'red')
+            })
+            newPeer.on('close', () => {
+                console.log('closed a connection')
             })
             rtcPeers[clientName] = newPeer
             this.setState({
@@ -164,7 +162,6 @@ export default class Canvas extends React.Component{
             const bounds = myCanvas.getBoundingClientRect()
             const x = (evt.targetTouches[0].pageX - bounds.left)/(bounds.width)
             const y = (evt.targetTouches[0].pageY - bounds.top)/(bounds.height)
-            console.log(x, 'bounds.width()-->', bounds.width)
             this.setState({lastPos: {x, y}})
         }
     }
@@ -185,7 +182,6 @@ export default class Canvas extends React.Component{
             const bounds = myCanvas.getBoundingClientRect()
             const x = (evt.targetTouches[0].pageX - bounds.left)/(bounds.width)
             const y = (evt.targetTouches[0].pageY - bounds.top)/(bounds.height)
-            console.log(x,y)
             const touchsXY = {type: 'paint', lastPos: this.state.lastPos, x, y, color: this.state.color, lineWidth: this.state.lineWidth}
             this.sendTouchs(JSON.stringify(touchsXY))
             this.drawTouchs(touchsXY)
@@ -199,7 +195,6 @@ export default class Canvas extends React.Component{
             const bounds = myCanvas.getBoundingClientRect()
             const x = (evt.nativeEvent.pageX - bounds.left)/(bounds.width)
             const y = (evt.nativeEvent.pageY - bounds.top)/(bounds.height)
-            console.log(x,y)
             const touchsXY = {type: 'paint',lastPos: this.state.lastPos, x, y}
             this.sendTouchs(JSON.stringify(touchsXY))
             this.drawTouchs(touchsXY)
@@ -275,28 +270,26 @@ export default class Canvas extends React.Component{
         this.setState({timer: new Date()})
     }
     changeColor = (evt) => {
-        const color = evt.target.style.backgroundColor;
+        const color = evt.currentTarget.style.backgroundColor;
+        console.log(color)
         this.setState({color, lineWidth: '6'})
     }
     selectEraser = (evt) => {
         this.setState({color: 'white', lineWidth: '24'})
     }
     changeStyle = () => {
-        console.log(window.innerWidth)
-        if(window.innerWidth < 1001){
             document.querySelectorAll('.palette-color').forEach( c => {
-                c.style.width = window.innerWidth * 0.08 + 'px'
-                c.style.height = window.innerWidth * 0.08 + 'px'
+                c.style.width = window.innerHeight * 0.1 + 'px'
+                c.style.height = window.innerHeight * 0.1 + 'px'
             })
-            document.getElementById('eraser').style.width = window.innerWidth * 0.08 + 'px'
-            document.getElementById('eraser').style.height = window.innerWidth * 0.08 + 'px'
+            document.getElementById('eraser').style.width = window.innerHeight * 0.1 + 'px'
+            document.getElementById('eraser').style.height = window.innerHeight * 0.1 + 'px'
             const myCanvas = this.state.canvasRef.current
-            myCanvas.width = window.innerWidth
+            myCanvas.width = (window.innerHeight * 0.7) * 9/19
             myCanvas.height = window.innerHeight * 0.7
             const ranking = document.getElementById('ranking')
             ranking.style.width = window.innerWidth
             ranking.style.height = window.innerHeight * 0.7
-        }
     }
     render(){
         return( 
@@ -317,6 +310,7 @@ export default class Canvas extends React.Component{
             </div>
             <canvas style={{border: '1px solid black'}} ref={this.state.canvasRef} onMouseDown={this.mouseDown} onMouseMove={this.mouseMove} onMouseUp={this.mouseUp} onTouchStart={this.touchStart} onTouchEnd={this.touchEnd} id="myCanvas" width='300' height='200'></canvas>
             <table className='palette'>
+            <tbody>
                 <tr>
                     <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'black'}}></td>
                     <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'grey'}}></td>
@@ -329,6 +323,7 @@ export default class Canvas extends React.Component{
                     <td className='palette-color' onClick={this.changeColor} style={{backgroundColor: 'cyan'}}></td>
                     <td className='palette-eraser' id='eraser' onClick={this.selectEraser}></td>
                 </tr>
+            </tbody>
             </table>
             <Chat ref={this.state.chatRef} room={this.state.room} socket={this.state.socket} myName={this.state.myName}/>
             </div>) 

@@ -8,15 +8,27 @@ export default class Chat extends React.Component{
     }
     componentDidMount(){
         const socket = this.state.socket
-        const cloneMessages = this.state.messages
         setTimeout(this.changeChatStyle, 0)
         window.addEventListener('resize', this.changeChatStyle)
         socket.on('message', (name, message) => {
+        const cloneMessages = [...this.state.messages]
             cloneMessages.unshift({name, message, type: 'message'})
             this.setState({messages: cloneMessages})
         })
         socket.on('correct guess', name => {
-            cloneMessages.unshift({name, message: `${name} guessed the word`, type: 'guess'})
+            const cloneMessages = [...this.state.messages]
+            cloneMessages.unshift({name, type: 'guess'})
+            this.setState({messages: cloneMessages})
+        })
+        socket.on('new client', name => {
+            console.log('new client')
+            const cloneMessages = [...this.state.messages]
+            cloneMessages.unshift({name, type: 'new client'})
+            this.setState({messages: cloneMessages})
+        })
+        socket.on('client left', name => {
+            const cloneMessages = [...this.state.messages]
+            cloneMessages.unshift({name, type: 'client left'})
             this.setState({messages: cloneMessages})
         })
     }
@@ -45,6 +57,8 @@ export default class Chat extends React.Component{
         {
             this.state.messages.map((message,i) => {
                 if(message.type === 'guess') return <p key={'message-'+i}>{message.name} guessed the word!</p>
+                if(message.type === 'new client') return <p key={'message-'+i}>{message.name} joined the room!</p>
+                if(message.type === 'client left') return <p key={'message-'+i}>{message.name} left the room</p>
                 return <p key={'message-'+i}>{message.name}: {message.message}</p>
             })
         }

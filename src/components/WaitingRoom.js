@@ -23,7 +23,7 @@ class WaitingRoom extends React.Component{
         if(this.state.loading){
             return(
                 <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                <p>Name:</p>
+                <p>Your name:</p>
                 <input type="text" name="myName" onChange={this.handleChange}/>
                 <button onClick={() => {
                     this.setState({loading: false})

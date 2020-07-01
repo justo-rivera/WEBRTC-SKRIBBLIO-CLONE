@@ -32,8 +32,8 @@ export default class SelectRoom extends React.Component{
         }
         return (
             <form onSubmit={this.joinRoom} >
-            {this.state.rooms && <p>Rooms:</p> }
-            {this.state.rooms || <p>No one is playing, create a room!</p>}
+            {this.state.rooms.length > 0 && <p>Rooms:</p> }
+            {this.state.rooms.length > 0 || <p>No one is playing, create a room!</p>}
             <ul>
                 {
                     this.state.rooms && this.state.rooms.map( room => 

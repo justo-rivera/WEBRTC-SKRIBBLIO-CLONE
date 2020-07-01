@@ -27,7 +27,9 @@ export default class Canvas extends React.Component{
         chatRef: React.createRef(),
         rankingRef: React.createRef(),
         loading: !this.props.name,
-        innerHeight: null
+        innerHeight: null,
+        styledMobile: false,
+        styledDesktop: false
     }
     componentDidMount(){
         const myCanvas = this.state.canvasRef.current
@@ -298,11 +300,12 @@ export default class Canvas extends React.Component{
     }
     changeStyle = () => {
         if(window.innerHeight !== this.state.innerHeight){
-            if(window.screen.height <= window.screen.width) this.changeStyleDesktop()
-            else this.changeStyleMobile()
+            if(window.screen.height <= window.screen.width && !this.state.styledDesktop) this.changeStyleDesktop()
+            else if(!this.state.styledMobile) this.changeStyleMobile()
         }
     }
     changeStyleMobile = () => {
+        this.setState({styledMobile: true})
         document.getElementById('eraser').style.backgroundSize = window.innerWidth * 0.08 + 'px' + ' ' + window.innerWidth * 0.08 + 'px'
         const myCanvas = this.state.canvasRef.current
         myCanvas.width = window.innerWidth * 0.95
@@ -318,7 +321,7 @@ export default class Canvas extends React.Component{
         ranking.style.height = window.innerHeight * 0.7 + 'px'
     }
     changeStyleDesktop = () => {
-        this.setState({innerHeight: window.innerHeight})
+        this.setState({styledDesktop: true})
         document.querySelectorAll('.palette-color').forEach( c => {
             c.style.width = window.innerHeight * 0.048 + 'px'
             c.style.height = window.innerHeight * 0.048 + 'px'

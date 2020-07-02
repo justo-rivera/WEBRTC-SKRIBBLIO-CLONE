@@ -34,9 +34,9 @@ export default class Canvas extends React.Component{
         const myCanvas = this.state.canvasRef.current
         myCanvas.addEventListener('touchmove', this.touchMove, {passive: false})
         myCanvas.addEventListener('touchstart', this.touchStart, {passive: false})
-        window.addEventListener('resize', this.changeStyle)
+        //window.addEventListener('resize', this.changeStyle)
         window.addEventListener('mouseup', this.mouseUp)
-        setTimeout(this.changeStyle, 100)
+        setTimeout(this.changeStyle, 400)
         const {socket} = this.state
 
         axios.get(`${config.API_URL}/room/${this.props.match.params.roomName}`)
@@ -64,7 +64,6 @@ export default class Canvas extends React.Component{
         socket.on('client left', clientName => {
             const {rtcPeers} = {...this.state}
             if(rtcPeers[clientName]) {
-                rtcPeers[clientName].destroy()
                 delete rtcPeers[clientName]
                 this.setState({rtcPeers, connectedPeers: this.state.connectedPeers-1})
             }
@@ -260,10 +259,9 @@ export default class Canvas extends React.Component{
     endGame = () => {
         const {rtcPeers} = {...this.state}
         for(let peer of rtcPeers){
-            peer.destroy()
             delete rtcPeers[peer]
         }
-        this.setState({connectedPeers: 0})
+        this.setState({connectedPeers: 0, chooseAWord: false})
         let myCanvas = this.state.canvasRef.current
         let rankingDiv = this.state.rankingRef.current
         let rankingList = this.state.ranking.map( r => `<li>${r.client}: ${r.points}</li>`)
@@ -299,8 +297,10 @@ export default class Canvas extends React.Component{
         this.setState({color: 'white', lineWidth: '24'})
     }
     changeStyle = () => {
-        if(window.screen.height <= window.screen.width && !this.state.styledDesktop) this.changeStyleDesktop()
-        else if(window.screen.height > window.screen.width && !this.state.styledMobile) this.changeStyleMobile()
+        if(!this.state.styledDesktop && !this.state.styledMobile){
+            if(window.screen.height <= window.screen.width) this.changeStyleDesktop()
+            else this.changeStyleMobile()
+        }
     }
     changeStyleMobile = () => {
         this.setState({styledMobile: true})

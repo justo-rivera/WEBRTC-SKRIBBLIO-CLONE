@@ -36,7 +36,8 @@ export default class Canvas extends React.Component{
         myCanvas.addEventListener('touchmove', this.touchMove, {passive: false})
         myCanvas.addEventListener('touchstart', this.touchStart, {passive: false})
         window.addEventListener('resize', this.changeStyle)
-        setTimeout(this.changeStyle, 0)
+        window.addEventListener('mouseup', this.mouseUp)
+        setTimeout(this.changeStyle, 100)
         const {socket} = this.state
 
         axios.get(`${config.API_URL}/room/${this.props.match.params.roomName}`)
@@ -73,8 +74,8 @@ export default class Canvas extends React.Component{
             this.clearCanvas()
             this.setState({currentLeader: '', word: ''})
         })
-        socket.on('game ended', ranking => {
-            this.setState({ranking}, this.endGame)
+        socket.on('game ended', ({ranking, lastWord}) => {
+            this.setState({ranking, lastWord}, this.endGame)
         })
     }
     socketJoinRoom = () =>{
@@ -208,7 +209,7 @@ export default class Canvas extends React.Component{
         }
     }
     mouseUp = (evt) => {
-        this.setState({isMouseDrawing: false})
+        if(this.state.isMouseDrawing) this.setState({isMouseDrawing: false})
     }
     drawTouchs = (touchs, remote = false) => {
         const myCanvas = this.state.canvasRef.current
@@ -268,7 +269,7 @@ export default class Canvas extends React.Component{
         let rankingDiv = this.state.rankingRef.current
         let rankingList = this.state.ranking.map( r => `<li>${r.client}: ${r.points}</li>`)
         rankingDiv.innerHTML = `<h2>Game finished!</h2><br/>`
-        rankingDiv.innerHTML += `Last word was <b>${this.state.lastWord}</b><br/>Final Ranking: <ul> ${rankingList.join('')} </ul>`
+        rankingDiv.innerHTML += `Last word was <b>${this.state.lastWord}</b><br/>Final Ranking: <ul> ${rankingList.join('')} </ul><br/><br/><br/><button className="play-again" onclick="location.reload()">Play again</button>`
         myCanvas.style.display = 'none'
         rankingDiv.style.display = 'block'
     }
@@ -301,7 +302,7 @@ export default class Canvas extends React.Component{
     changeStyle = () => {
         if(window.innerHeight !== this.state.innerHeight){
             if(window.screen.height <= window.screen.width && !this.state.styledDesktop) this.changeStyleDesktop()
-            else if(!this.state.styledMobile) this.changeStyleMobile()
+            else if(window.screen.height > window.screen.width && !this.state.styledMobile) this.changeStyleMobile()
         }
     }
     changeStyleMobile = () => {

@@ -36,7 +36,7 @@ export default class Canvas extends React.Component{
         myCanvas.addEventListener('touchstart', this.touchStart, {passive: false})
         //window.addEventListener('resize', this.changeStyle)
         window.addEventListener('mouseup', this.mouseUp)
-        setTimeout(this.changeStyle, 400)
+        setTimeout(this.changeStyle, 100)
         const {socket} = this.state
 
         axios.get(`${config.API_URL}/room/${this.props.match.params.roomName}`)

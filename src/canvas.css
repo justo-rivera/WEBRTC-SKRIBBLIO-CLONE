@@ -5,8 +5,8 @@ body {
 canvas {
     background-color: white;
 }
-table {
-    /* background-color: white */
+.white-link {
+    color: white;
 }
 /* .button-word-choose {
     background-color: orangered;
@@ -23,4 +23,14 @@ table {
 }
 #chat {
     scrollbar-color: navy;
+}
+.homepage {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.homepage form {
+    background-color: rgb(5, 64, 173);
+    padding: 20px;
 }

@@ -240,7 +240,7 @@ export default class Canvas extends React.Component{
         let image = new Image()
         image.onload = () => {
             ctx.globalCompositeOperation = 'destination-over'
-            ctx.drawImage(image, 0, 0)
+            ctx.drawImage(image, 0, 0, myCanvas.width, myCanvas.height)
         }
         image.src = imageURI
     }
@@ -312,6 +312,8 @@ export default class Canvas extends React.Component{
         const myCanvas = this.state.canvasRef.current
         myCanvas.width = window.screen.width * 0.95
         myCanvas.height = window.screen.height * 0.6
+        console.log(window.screen.height)
+        console.log(myCanvas.height)
         document.querySelectorAll('.palette-color').forEach( c => {
             c.style.width = window.innerWidth * 0.08 + 'px'
             c.style.height = window.innerWidth * 0.08 + 'px'
@@ -319,8 +321,8 @@ export default class Canvas extends React.Component{
         document.getElementById('eraser').style.width = window.innerWidth * 0.08 + 'px'
         document.getElementById('eraser').style.height = window.innerWidth * 0.08 + 'px'
         const ranking = document.getElementById('ranking')
-        ranking.style.width = window.innerWidth * 0.95 + 'px'
-        ranking.style.height = window.innerHeight * 0.7 + 'px'
+        ranking.style.width = window.screen.width * 0.95 + 'px'
+        ranking.style.height = window.screen.height * 0.6 + 'px'
     }
     changeStyleDesktop = () => {
         this.setState({styledDesktop: true})

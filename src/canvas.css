@@ -8,6 +8,10 @@ canvas {
 table {
     /* background-color: white */
 }
+/* .button-word-choose {
+    background-color: orangered;
+    color: white;
+} */
 .palette-eraser {
     background-image: url("images/eraser.png");
     background-repeat: no-repeat;

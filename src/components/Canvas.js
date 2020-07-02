@@ -34,9 +34,9 @@ export default class Canvas extends React.Component{
         const myCanvas = this.state.canvasRef.current
         myCanvas.addEventListener('touchmove', this.touchMove, {passive: false})
         myCanvas.addEventListener('touchstart', this.touchStart, {passive: false})
-        //window.addEventListener('resize', this.changeStyle)
+        window.addEventListener('resize', this.changeStyle)
         window.addEventListener('mouseup', this.mouseUp)
-        window.addEventListener('load', this.changeStyle)
+        setTimeout(this.changeStyle, 0)
         const {socket} = this.state
 
         axios.get(`${config.API_URL}/room/${this.props.match.params.roomName}`)
@@ -310,8 +310,8 @@ export default class Canvas extends React.Component{
         this.setState({styledMobile: true})
         document.getElementById('eraser').style.backgroundSize = window.innerWidth * 0.08 + 'px' + ' ' + window.innerWidth * 0.08 + 'px'
         const myCanvas = this.state.canvasRef.current
-        myCanvas.width = window.innerWidth * 0.95
-        myCanvas.height = window.innerHeight * 0.7
+        myCanvas.width = window.screen.width * 0.95
+        myCanvas.height = window.screen.height * 0.6
         document.querySelectorAll('.palette-color').forEach( c => {
             c.style.width = window.innerWidth * 0.08 + 'px'
             c.style.height = window.innerWidth * 0.08 + 'px'
@@ -350,14 +350,13 @@ export default class Canvas extends React.Component{
             </>
             }
             {this.state.chooseAWord &&
-             <p>Choose a word:</p>
-            }
-            {this.state.chooseAWord &&
-                this.state.possibleWords.map( word => 
-                    <button key={word} onClick={()=>{this.chooseWord(word)}}>
+             <p>Choose a word: 
+                {this.state.possibleWords.map( word => 
+                    <button key={word} className="button-word-choose" onClick={()=>{this.chooseWord(word)}}>
                         {word}
                     </button>                    
-                )
+                )}
+            </p>
             } 
             {this.state.chooseAWord &&
              <br/>
@@ -365,7 +364,7 @@ export default class Canvas extends React.Component{
             <div id='ranking' style={{display: 'none'}} ref={this.state.rankingRef}>
                 Ranking
             </div>
-            <canvas style={{border: '1px solid black'}} ref={this.state.canvasRef} onMouseDown={this.mouseDown} onMouseMove={this.mouseMove} onMouseUp={this.mouseUp} id="myCanvas" width='300' height='200'></canvas>
+            <canvas style={{border: '1px solid black'}} ref={this.state.canvasRef} onMouseDown={this.mouseDown} onMouseMove={this.mouseMove} onMouseUp={this.mouseUp} id="myCanvas" width='390' height='400'></canvas>
             <table className='palette'>
             <tbody>
                 <tr>

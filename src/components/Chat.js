@@ -47,7 +47,7 @@ export default class Chat extends React.Component{
             chat.style.overflowY = 'scroll'
         }
         else{
-            chat.style.maxHeight = window.innerHeight * 0.15 + 'px'
+            chat.style.maxHeight = window.innerHeight * 0.14 + 'px'
             chat.style.overflowY = 'scroll'
         }
     }

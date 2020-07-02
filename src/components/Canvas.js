@@ -279,6 +279,10 @@ export default class Canvas extends React.Component{
         const {socket} = this.state
         this.setState({chooseAWord: false, possibleWords: [], word})
         socket.emit('chose word', word)
+        let myCanvas = this.state.canvasRef.current
+        let rankingDiv = this.state.rankingRef.current
+        myCanvas.style.display = 'block'
+        rankingDiv.style.display = 'none'
     }
     handleChange = (e) => {
         e.preventDefault()

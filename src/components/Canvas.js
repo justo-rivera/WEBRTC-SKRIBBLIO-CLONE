@@ -309,7 +309,7 @@ export default class Canvas extends React.Component{
         myCanvas.width = window.innerWidth * 0.95
         myCanvas.height = window.innerHeight * 0.7
         document.querySelectorAll('.palette-color').forEach( c => {
-            c.style.width = myCanvas.width * 0.08 + 'px'
+            c.style.width = window.innerWidth * 0.08 + 'px'
             c.style.height = window.innerWidth * 0.08 + 'px'
         })
         document.getElementById('eraser').style.width = window.innerWidth * 0.08 + 'px'

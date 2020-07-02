@@ -27,7 +27,6 @@ export default class Canvas extends React.Component{
         chatRef: React.createRef(),
         rankingRef: React.createRef(),
         loading: !this.props.name,
-        innerHeight: null,
         styledMobile: false,
         styledDesktop: false
     }
@@ -300,10 +299,8 @@ export default class Canvas extends React.Component{
         this.setState({color: 'white', lineWidth: '24'})
     }
     changeStyle = () => {
-        if(window.innerHeight !== this.state.innerHeight){
-            if(window.screen.height <= window.screen.width && !this.state.styledDesktop) this.changeStyleDesktop()
-            else if(window.screen.height > window.screen.width && !this.state.styledMobile) this.changeStyleMobile()
-        }
+        if(window.screen.height <= window.screen.width && !this.state.styledDesktop) this.changeStyleDesktop()
+        else if(window.screen.height > window.screen.width && !this.state.styledMobile) this.changeStyleMobile()
     }
     changeStyleMobile = () => {
         this.setState({styledMobile: true})

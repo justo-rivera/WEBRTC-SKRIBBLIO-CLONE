@@ -65,8 +65,8 @@ export default class Chat extends React.Component{
         {
             this.state.messages.map((message,i) => {
                 if(message.type === 'guess') return <p key={'message-'+i} style={{color: 'greenyellow'}}><b>{message.name}</b> guessed the word!</p>
-                if(message.type === 'new client') return <p key={'message-'+i}>{message.name} joined the room!</p>
-                if(message.type === 'client left') return <p key={'message-'+i}>{message.name} left the room</p>
+                if(message.type === 'new client') return <p key={'message-'+i} style={{color: 'white'}}>{message.name} joined the room!</p>
+                if(message.type === 'client left') return <p key={'message-'+i} style={{color: 'white'}}>{message.name} left the room</p>
                 return <p key={'message-'+i}>{message.name}: {message.message}</p>
             })
         }

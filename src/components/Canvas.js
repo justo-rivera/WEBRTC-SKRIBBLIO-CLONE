@@ -254,7 +254,7 @@ export default class Canvas extends React.Component{
         setTimeout( () => {
             myCanvas.style.display = 'block'
             rankingDiv.style.display = 'none'
-        }, 8*1000)
+        }, 5*1000)
     }
     endGame = () => {
         const {rtcPeers} = {...this.state}
@@ -350,7 +350,7 @@ export default class Canvas extends React.Component{
             </>
             }
             {this.state.chooseAWord &&
-             <p>Choose a word: 
+             <p>Choose a word:  
                 {this.state.possibleWords.map( word => 
                     <button key={word} className="button-word-choose" onClick={()=>{this.chooseWord(word)}}>
                         {word}

@@ -37,7 +37,7 @@ A user creates a room and shares the link with their friends. Every 30 seconds a
 
 # SERVER (WebRTC)
 
-# [github.com/justo-rivera/WEBRTC-SKRIBBLIO-CLONE-SERVER](WEBRTC-SKRIBBLIO-CLONE-SERVER)
+# [WEBRTC-SKRIBBLIO-CLONE-SERVER](github.com/justo-rivera/WEBRTC-SKRIBBLIO-CLONE-SERVER)
 ---
 ---
 #### models

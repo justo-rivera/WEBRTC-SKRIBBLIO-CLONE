@@ -25,17 +25,10 @@ A user creates a room and shares the link with their friends. Every 30 seconds a
 - Chat
     - Communicate with your room
 
-## IO
+## I/O
 
 
 ### Services
-
-- Auth Service
-  - auth.login(user)
-  - auth.signup(user)
-  - auth.logout()
-  - auth.me()
-  - auth.getUser() // synchronous
 - Socket/Room Service
   - room.start()
   - room.create(room-name)

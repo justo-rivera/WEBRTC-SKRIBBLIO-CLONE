@@ -35,14 +35,12 @@ A user creates a room and shares the link with their friends. Every 30 seconds a
   - room.changeLeader(room-name)
   - room.save(room-name)
 
-## SERVER (WebRTC)
+# SERVER (WebRTC)
 
-github.com/justo-rivera/WEBRTC-SKRIBBLIO-CLONE-SERVER
-  
-  
-  
-  
-#### Models
+# [github.com/justo-rivera/WEBRTC-SKRIBBLIO-CLONE-SERVER](WEBRTC-SKRIBBLIO-CLONE-SERVER)
+---
+---
+#### models
 
 User model
 

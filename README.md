@@ -1,15 +1,15 @@
-### DRAW & GUESS
+## DRAW & GUESS
 
-[PICTIONAR-IO.HEROKUAPP.COM](PICTIONAR-IO.HEROKUAPP.COM)
+# [PICTIONAR-IO.HEROKUAPP.COM](PICTIONAR-IO.HEROKUAPP.COM)
 
 
 
-## how
+### how
 
 A user creates a room and shares the link with their friends. Every 30 seconds a leader of the room is chosen, he selects a word and has the ability to draw on the canvas. What he draws is seen by the rest of the room, they can use the chat to try to guess the word.
 
 
-## Routes
+### Routes
 
 - / - List of public rooms (Homepage)
 - /auth/signup - Signup form
@@ -19,7 +19,7 @@ A user creates a room and shares the link with their friends. Every 30 seconds a
 - /profile/me - my details and past games
 - 404
 
-## Components
+### Components
 
 - Room 
     - Join a room, connect to the peers
@@ -33,7 +33,7 @@ A user creates a room and shares the link with their friends. Every 30 seconds a
 ## IO
 
 
-## Services
+### Services
 
 - Auth Service
   - auth.login(user)
@@ -47,10 +47,14 @@ A user creates a room and shares the link with their friends. Every 30 seconds a
   - room.changeLeader(room-name)
   - room.save(room-name)
 
-# Server
+## SERVER (WebRTC)
 
 github.com/justo-rivera/WEBRTC-SKRIBBLIO-CLONE-SERVER
-## Models
+  
+  
+  
+  
+#### Models
 
 User model
 

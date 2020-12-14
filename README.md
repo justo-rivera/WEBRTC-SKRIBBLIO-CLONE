@@ -11,12 +11,8 @@ A user creates a room and shares the link with their friends. Every 30 seconds a
 ### Routes
 
 - / - List of public rooms (Homepage)
-- /auth/signup - Signup form
-- /auth/login - Login form
 - /ROOM-NAME - Join 'ROOM-NAME' room
 - /new - Create a new room
-- /profile/me - my details and past games
-- 404
 
 ### Components
 

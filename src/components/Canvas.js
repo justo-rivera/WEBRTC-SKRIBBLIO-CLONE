@@ -94,7 +94,7 @@ export default class Canvas extends React.Component{
         }
         else{
             let newPeer = new Peer({initiator: false, trickle: true, 
-                config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'turn:relay.backups.cz', username: 'webrtc', credential: 'webrtc' }] },
+                config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] },
                 wrtc})
             newPeer.clientName = clientName
             newPeer.signal(data)

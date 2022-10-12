@@ -144,7 +144,25 @@ export default class Canvas extends React.Component{
         const {room, rtcPeers} = {...this.state}
         room.clients && room.clients.map( client => {
             let newPeer = new Peer({initiator: true, trickle: true, 
-                config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'turn:relay.backups.cz', username: 'webrtc', credential: 'webrtc' }] },
+                config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'turn:numb.viagenie.ca', username: 'muazkh', credential: 'webrtc@live.com' },
+                {
+                urls: "stun:openrelay.metered.ca:80",
+              },
+              {
+                urls: "turn:openrelay.metered.ca:80",
+                username: "openrelayproject",
+                credential: "openrelayproject",
+              },
+              {
+                urls: "turn:openrelay.metered.ca:443",
+                username: "openrelayproject",
+                credential: "openrelayproject",
+              },
+              {
+                urls: "turn:openrelay.metered.ca:443?transport=tcp",
+                username: "openrelayproject",
+                credential: "openrelayproject",
+              }] },
                 wrtc})
             newPeer.on('signal', data => 
             {
